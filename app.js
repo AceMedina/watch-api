@@ -12,7 +12,7 @@ async function loadWatches() {
         const data = await response.json();
         allWatches = data.watches;
         
-        // Take top 5 watches (1 per brand) for the hero slider
+        // Hero slider
         featuredWatches = allWatches.slice(0, 5);
         
         displayWatches(allWatches);
@@ -25,7 +25,7 @@ async function loadWatches() {
     }
 }
 
-// DISPLAY WATCHES IN 4-COLUMN GRID
+// RENDER GRID CARDS
 function displayWatches(watches) {
     const grid = document.getElementById("watchGrid");
     grid.innerHTML = "";
@@ -54,7 +54,7 @@ function displayWatches(watches) {
     });
 }
 
-// HERO SHOWCASE CONTROLS
+// HERO DISPLAY CONTROLS
 function updateHero(index) {
     if (!featuredWatches || featuredWatches.length === 0) return;
     currentHeroIndex = index;
@@ -85,11 +85,10 @@ function nextHeroWatch() {
     updateHero(currentHeroIndex);
 }
 
-// SEARCH
+// SEARCH FILTER
 async function searchWatches() {
     const query = document.getElementById("searchInput").value.trim();
     
-    // Clear any active brand filters
     document.querySelectorAll(".brand-circle").forEach(btn => btn.classList.remove("active"));
     selectedBrand = "";
 
@@ -108,7 +107,7 @@ async function searchWatches() {
     }
 }
 
-// BRAND QUICK FILTER (TOGGLE ON/OFF)
+// BRAND FILTER TOGGLE
 function toggleBrandFilter(brandName, element) {
     const isAlreadySelected = element.classList.contains("active");
 
@@ -126,7 +125,7 @@ function toggleBrandFilter(brandName, element) {
     }
 }
 
-// MODAL POPUP
+// MODAL CONTROLS
 function openModal(watch) {
     document.getElementById("modalBrand").innerText = watch.brand;
     document.getElementById("modalTitle").innerText = watch.model;
@@ -154,7 +153,7 @@ function handleBackdropClick(event) {
     }
 }
 
-// ENTER KEY FOR SEARCH
+// EVENT LISTENERS
 document.getElementById("searchInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") searchWatches();
 });

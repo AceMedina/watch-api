@@ -17,7 +17,6 @@ app.add_middleware(
 
 # WATCH DATA
 watches = [
-    # TOP 5 FEATURED (1 PER BRAND)
     {
         "id": 1,
         "brand": "Rolex",
@@ -68,8 +67,6 @@ watches = [
         "image": "images/rm011.jpg",
         "description": "An avant-garde motorsport timepiece featuring a flyback chronograph and annual calendar in a signature tonneau case. Powered by the automatic skeletonized Calibre RMAC1 with a 50-hour power reserve, 50mm x 40mm dimensions, and 50m water resistance."
     },
-
-    # REMAINING BRAND MODELS
     {
         "id": 6,
         "brand": "Rolex",
@@ -176,7 +173,7 @@ watches = [
 @app.get("/")
 def home():
     return {
-        "message": "Welcome to the Simple Watch API!",
+        "message": "Welcome to the Watch Gallery API!",
         "endpoints": [
             "/watches",
             "/watches/{id}",
@@ -192,7 +189,7 @@ def get_watches():
         "watches": watches
     }
 
-# SEARCH WATCHES (PLACED BEFORE /{watch_id} ROUTE)
+# SEARCH WATCHES
 @app.get("/watches/search")
 def search_watches(q: str = Query("", min_length=0)):
     if not q.strip():

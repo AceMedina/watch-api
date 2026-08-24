@@ -1,3 +1,4 @@
+/* BASE */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -132,6 +133,7 @@ html {
     transition: transform 0.3s ease;
 }
 
+/* HERO CONTROLS */
 .hero-nav-btn {
     position: absolute;
     top: 50%;
@@ -165,7 +167,7 @@ html {
     margin: 0 auto;
 }
 
-/* BRAND SELECT ROW */
+/* BRAND FILTER BUTTONS */
 .brand-filter-row {
     display: flex;
     justify-content: center;
@@ -259,13 +261,14 @@ html {
     background-color: #1F493D;
 }
 
-/* 4-COLUMN GRID */
+/* GRID LAYOUT */
 .watch-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 24px;
 }
 
+/* WATCH CARD */
 .watch-card {
     background-color: #FDFDFD;
     border-radius: 8px;
@@ -370,6 +373,7 @@ html {
     grid-template-columns: 1fr 1.2fr;
 }
 
+/* MODAL COLUMNS */
 .modal-image-col {
     background-color: #336659;
     display: flex;
