@@ -192,6 +192,36 @@ def get_watches():
         "watches": watches
     }
 
+# SEARCH WATCHES (PLACED BEFORE /{watch_id} ROUTE)
+@app.get("/watches/search")
+def search_watches(q: str = Query("", min_length=0)):
+    if not q.strip():
+        return {
+            "query": "",
+            "count": len(watches),
+            "results": watches
+        }
+
+    query = q.lower().strip()
+    results = []
+    for watch in watches:
+        searchable_text = (
+            f"{watch['brand']} "
+            f"{watch['model']} "
+            f"{watch['nickname']} "
+            f"{watch['reference_number']} "
+            f"{watch['case_material']}"
+        ).lower()
+
+        if query in searchable_text:
+            results.append(watch)
+
+    return {
+        "query": q,
+        "count": len(results),
+        "results": results
+    }
+
 # GET ONE WATCH
 @app.get("/watches/{watch_id}")
 def get_watch(watch_id: int):
@@ -203,26 +233,3 @@ def get_watch(watch_id: int):
         status_code=404,
         detail="Watch not found."
     )
-
-# SEARCH WATCHES
-@app.get("/watches/search")
-def search_watches(q: str = Query(..., min_length=1)):
-    q = q.lower()
-    results = []
-    for watch in watches:
-        searchable_text = (
-            f"{watch['brand']} "
-            f"{watch['model']} "
-            f"{watch['nickname']} "
-            f"{watch['reference_number']} "
-            f"{watch['case_material']}"
-        ).lower()
-
-        if q in searchable_text:
-            results.append(watch)
-
-    return {
-        "query": q,
-        "count": len(results),
-        "results": results
-    }
