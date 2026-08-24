@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Gallery</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- STICKY NAVBAR -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="#hero" class="brand-logo">Watch Gallery</a>
+            <nav class="nav-links">
+                <a href="#hero">Home</a>
+                <a href="#collections">Collections</a>
+                <span class="nav-disabled">Contact</span>
+                <span class="nav-disabled">About Us</span>
+            </nav>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="hero-section">
+        <button class="hero-nav-btn prev-btn" onclick="prevHeroWatch()" aria-label="Previous Watch">&#10094;</button>
+        <button class="hero-nav-btn next-btn" onclick="nextHeroWatch()" aria-label="Next Watch">&#10095;</button>
+
+        <div class="hero-container">
+            <div class="hero-content">
+                <p class="hero-eyebrow" id="heroBrand">ROLEX</p>
+                <h1 class="hero-title" id="heroTitle">GMT-Master II "Pepsi"</h1>
+                <p class="hero-desc" id="heroDesc">An iconic dual-time pilot watch featuring a bidirectional red and blue Cerachrom ceramic bezel.</p>
+                <div class="hero-pills" id="heroPills">
+                    <span class="pill" id="heroRef">Ref. 126710BLRO</span>
+                    <span class="pill" id="heroMaterial">Oystersteel</span>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <img id="heroImage" src="images/pepsi.jpg" alt="Featured Watch" onerror="this.src='https://placehold.co/500x500/1F493D/F3EFE8?text=Featured+Watch'">
+            </div>
+        </div>
+    </section>
+
+    <!-- CATALOG SECTION -->
+    <section id="collections" class="catalog-section">
+        <div class="catalog-container">
+            
+            <!-- BRAND QUICK-SELECT -->
+            <div class="brand-filter-row">
+                <button class="brand-circle" onclick="toggleBrandFilter('Rolex', this)" title="Rolex">
+                    <img src="images/rolex.jpg" alt="Rolex" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">Rolex</span>
+                </button>
+                <button class="brand-circle" onclick="toggleBrandFilter('Omega', this)" title="Omega">
+                    <img src="images/omega.jpg" alt="Omega" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">Omega</span>
+                </button>
+                <button class="brand-circle" onclick="toggleBrandFilter('Audemars Piguet', this)" title="Audemars Piguet">
+                    <img src="images/ap.jpg" alt="Audemars Piguet" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">AP</span>
+                </button>
+                <button class="brand-circle" onclick="toggleBrandFilter('Patek Philippe', this)" title="Patek Philippe">
+                    <img src="images/patek.jpg" alt="Patek Philippe" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">Patek</span>
+                </button>
+                <button class="brand-circle" onclick="toggleBrandFilter('Richard Mille', this)" title="Richard Mille">
+                    <img src="images/rm.jpg" alt="Richard Mille" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">RM</span>
+                </button>
+            </div>
+
+            <!-- SEARCH BAR -->
+            <div class="search-bar-wrap">
+                <input type="text" id="searchInput" placeholder="Search...">
+                <button id="searchBtn" onclick="searchWatches()">SEARCH</button>
+            </div>
+
+            <!-- CATALOG GRID -->
+            <div id="watchGrid" class="watch-grid">
+                <!-- Injected dynamically via app.js -->
+            </div>
+        </div>
+    </section>
+
+    <!-- WATCH DETAIL MODAL -->
+    <div id="detailModal" class="modal-overlay" onclick="handleBackdropClick(event)">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-body">
+                <div class="modal-image-col">
+                    <img id="modalImage" src="" alt="Watch Detail">
+                </div>
+                <div class="modal-info-col">
+                    <p class="modal-brand" id="modalBrand">BRAND</p>
+                    <h2 class="modal-title" id="modalTitle">Model Name</h2>
+                    <h3 class="modal-nickname" id="modalNickname">"Nickname"</h3>
+                    
+                    <div class="modal-meta">
+                        <p><strong>Reference Number:</strong> <span id="modalRef"></span></p>
+                        <p><strong>Case Material:</strong> <span id="modalMaterial"></span></p>
+                    </div>
+
+                    <div class="modal-divider"></div>
+                    <p class="modal-description" id="modalDescription"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
