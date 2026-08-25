@@ -166,6 +166,56 @@ watches = [
         "case_material": "ATZ Ceramic and Grade 5 Titanium",
         "image": "images/bubbawatson.jpg",
         "description": "A manual-wind skeletonized sports watch engineered to withstand extreme accelerations. Powered by the manual-wind Calibre RMUL2 with a 55-hour power reserve, 49.9mm x 42.7mm dimensions, and 30m water resistance."
+    },
+    {
+        "id": 16,
+        "brand": "Rolex",
+        "model": "Day-Date 40",
+        "nickname": "President",
+        "reference_number": "228238",
+        "case_material": "18k Yellow Gold",
+        "image": "images/president.jpg",
+        "description": "The quintessential prestige watch featuring the iconic President bracelet and champagne dial with fluted bezel. Powered by the automatic Calibre 3255 with a 70-hour power reserve, 40mm case diameter, and 100m water resistance."
+    },
+    {
+        "id": 17,
+        "brand": "Omega",
+        "model": "Planet Ocean 600M",
+        "nickname": "Deep Black",
+        "reference_number": "215.92.46.22.01.001",
+        "case_material": "Black Ceramic",
+        "image": "images/planetocean.jpg",
+        "description": "A state-of-the-art diving watch combining GMT functionality with extreme depth rating in a solid black ceramic case. Powered by the automatic Co-Axial Master Chronometer Calibre 8906 with a 60-hour power reserve, 45.5mm case diameter, and 600m water resistance."
+    },
+    {
+        "id": 18,
+        "brand": "Audemars Piguet",
+        "model": "Royal Oak Chronograph",
+        "nickname": "ROC Panda",
+        "reference_number": "26331ST.OO.1220ST.03",
+        "case_material": "Stainless Steel",
+        "image": "images/rocpanda.jpg",
+        "description": "A sporty high-horology chronograph featuring a silver-toned Grande Tapisserie dial and contrasting black sub-dials. Powered by the self-winding Calibre 2385 with a 40-hour power reserve, 41mm case diameter, and 50m water resistance."
+    },
+    {
+        "id": 19,
+        "brand": "Patek Philippe",
+        "model": "Calatrava",
+        "nickname": "Clous de Paris",
+        "reference_number": "6119R-001",
+        "case_material": "18k Rose Gold",
+        "image": "images/calatrava.jpg",
+        "description": "The benchmark round dress watch featuring a refined guilloche hobnail bezel and silvery grained dial. Powered by the manual-wind Calibre 30-255 PS with a 65-hour power reserve, 39mm case diameter, and 30m water resistance."
+    },
+    {
+        "id": 20,
+        "brand": "Richard Mille",
+        "model": "RM 67-02",
+        "nickname": "Sprint",
+        "reference_number": "RM 67-02",
+        "case_material": "Quartz TPT and Carbon TPT",
+        "image": "images/rm6702.jpg",
+        "description": "An ultra-thin, featherweight athletic watch weighing just 32 grams including its seamless comfort strap. Powered by the automatic skeletonized Calibre CRMA7 with a 50-hour power reserve, 38.7mm x 47.5mm dimensions, and 50m water resistance."
     }
 ]
 
