@@ -1,0 +1,1340 @@
+index.py
+from fastapi import FastAPI, HTTPException, Header, Query
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(
+    title="Simple Watch API",
+    description="A beginner-friendly REST API containing information about watches.",
+    version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+watches = [
+    {
+        "id": 1,
+        "brand": "Rolex",
+        "model": "GMT-Master II",
+        "nickname": "Pepsi",
+        "reference_number": "126710BLRO",
+        "case_material": "Oystersteel",
+        "case_size": "40mm",
+        "dial_color": "Black",
+        "bezel_material": "Bidirectional Red & Blue Cerachrom Ceramic",
+        "movement": "Automatic (Calibre 3285)",
+        "power_reserve": "70 Hours",
+        "water_resistance": "100m",
+        "image": "images/pepsi.jpg",
+        "description": "An iconic dual-time pilot watch featuring a bidirectional red and blue Cerachrom ceramic bezel. Powered by the automatic Calibre 3285 movement with a 70-hour power reserve, 40mm case diameter, and 100m water resistance."
+    },
+    {
+        "id": 2,
+        "brand": "Omega",
+        "model": "Speedmaster Professional",
+        "nickname": "Moonwatch",
+        "reference_number": "310.30.42.50.01.001",
+        "case_material": "Stainless Steel",
+        "case_size": "42mm",
+        "dial_color": "Black Step Dial",
+        "bezel_material": "Anodized Aluminum with Tachymeter Scale",
+        "movement": "Manual-Wind (Co-Axial Master Chronometer Calibre 3861)",
+        "power_reserve": "50 Hours",
+        "water_resistance": "50m",
+        "image": "images/moonwatch.jpg",
+        "description": "The legendary chronograph flight-qualified by NASA for all manned space missions. Powered by the manual-wind Co-Axial Master Chronometer Calibre 3861 with a 50-hour power reserve, 42mm case diameter, and 50m water resistance."
+    },
+    {
+        "id": 3,
+        "brand": "Audemars Piguet",
+        "model": "Royal Oak Jumbo Extra-Thin",
+        "nickname": "Jumbo",
+        "reference_number": "16202ST.OO.1240ST.01",
+        "case_material": "Stainless Steel",
+        "case_size": "39mm",
+        "dial_color": "Bleu Nuit Nuage 50 Petite Tapisserie",
+        "bezel_material": "Stainless Steel with 8 Hexagonal Screws",
+        "movement": "Automatic (Calibre 7121)",
+        "power_reserve": "55 Hours",
+        "water_resistance": "50m",
+        "image": "images/jumbo.jpg",
+        "description": "An iconic luxury sports watch featuring an integrated bracelet and signature Petite Tapisserie blue dial. Powered by the self-winding Calibre 7121 with a 55-hour power reserve, 39mm case diameter, 8.1mm thickness, and 50m water resistance."
+    },
+    {
+        "id": 4,
+        "brand": "Patek Philippe",
+        "model": "Nautilus",
+        "nickname": "Nautilus Blue",
+        "reference_number": "5711/1A-010",
+        "case_material": "Stainless Steel",
+        "case_size": "40mm",
+        "dial_color": "Horizontally Embossed Blue Sunburst",
+        "bezel_material": "Stainless Steel Rounded Octagonal",
+        "movement": "Automatic (Calibre 26-330 S C)",
+        "power_reserve": "45 Hours",
+        "water_resistance": "120m",
+        "image": "images/nautilus.jpg",
+        "description": "A prestigious luxury sports watch defined by its rounded octagonal bezel and horizontally embossed blue dial. Powered by the self-winding Calibre 26-330 S C with a 45-hour power reserve, 40mm case diameter, and 120m water resistance."
+    },
+    {
+        "id": 5,
+        "brand": "Richard Mille",
+        "model": "RM 011",
+        "nickname": "Felipe Massa",
+        "reference_number": "RM 011 FM",
+        "case_material": "Grade 5 Titanium",
+        "case_size": "50.0mm x 40.0mm",
+        "dial_color": "Skeletonized Transparent",
+        "bezel_material": "Grade 5 Titanium",
+        "movement": "Automatic Flyback Chronograph (Calibre RMAC1)",
+        "power_reserve": "50 Hours",
+        "water_resistance": "50m",
+        "image": "images/rm011.jpg",
+        "description": "An avant-garde motorsport timepiece featuring a flyback chronograph and annual calendar in a signature tonneau case. Powered by the automatic skeletonized Calibre RMAC1 with a 50-hour power reserve, 50mm x 40mm dimensions, and 50m water resistance."
+    },
+    {
+        "id": 6,
+        "brand": "Rolex",
+        "model": "Submariner Date",
+        "nickname": "Kermit",
+        "reference_number": "126610LV",
+        "case_material": "Oystersteel",
+        "case_size": "41mm",
+        "dial_color": "Black",
+        "bezel_material": "Unidirectional Green Cerachrom Ceramic",
+        "movement": "Automatic (Calibre 3235)",
+        "power_reserve": "70 Hours",
+        "water_resistance": "300m",
+        "image": "images/kermit.jpg",
+        "description": "A benchmark divers watch featuring a green unidirectional Cerachrom bezel and black dial. Powered by the automatic Calibre 3235 movement with a 70-hour power reserve, 41mm case diameter, and 300m water resistance."
+    },
+    {
+        "id": 7,
+        "brand": "Rolex",
+        "model": "Cosmograph Daytona",
+        "nickname": "Panda",
+        "reference_number": "126500LN",
+        "case_material": "Oystersteel",
+        "case_size": "40mm",
+        "dial_color": "White Lacquer with Black Sub-Dials",
+        "bezel_material": "Black Cerachrom Ceramic with Tachymetric Scale",
+        "movement": "Automatic Chronograph (Calibre 4131)",
+        "power_reserve": "72 Hours",
+        "water_resistance": "100m",
+        "image": "images/panda.jpg",
+        "description": "A celebrated racing chronograph with a white lacquer dial and black Cerachrom tachymetric bezel. Powered by the automatic Calibre 4131 movement with a 72-hour power reserve, 40mm case diameter, and 100m water resistance."
+    },
+    {
+        "id": 8,
+        "brand": "Omega",
+        "model": "Seamaster Diver 300M",
+        "nickname": "No Time to Die",
+        "reference_number": "210.90.42.20.01.001",
+        "case_material": "Grade 2 Titanium",
+        "case_size": "42mm",
+        "dial_color": "Tropical Matte Brown Aluminum",
+        "bezel_material": "Tropical Brown Aluminum with Vintage Super-LumiNova",
+        "movement": "Automatic (Co-Axial Master Chronometer Calibre 8806)",
+        "power_reserve": "55 Hours",
+        "water_resistance": "300m",
+        "image": "images/nttd.jpg",
+        "description": "The military-inspired 007 edition timepiece featuring a tropical brown aluminum dial and titanium mesh bracelet. Powered by the automatic Co-Axial Master Chronometer Calibre 8806 with a 55-hour power reserve, 42mm case diameter, and 300m water resistance."
+    },
+    {
+        "id": 9,
+        "brand": "Omega",
+        "model": "Seamaster Aqua Terra 150M",
+        "nickname": "Terracotta",
+        "reference_number": "220.10.38.20.13.003",
+        "case_material": "Stainless Steel",
+        "case_size": "38mm",
+        "dial_color": "Sun-Brushed Terracotta Brass",
+        "bezel_material": "Smooth Stainless Steel",
+        "movement": "Automatic (Co-Axial Master Chronometer Calibre 8800)",
+        "power_reserve": "55 Hours",
+        "water_resistance": "150m",
+        "image": "images/terracotta.jpg",
+        "description": "A versatile luxury sports watch featuring a sun-brushed terracotta-colored brass dial. Powered by the automatic Co-Axial Master Chronometer Calibre 8800 with a 55-hour power reserve, 38mm case diameter, and 150m water resistance."
+    },
+    {
+        "id": 10,
+        "brand": "Audemars Piguet",
+        "model": "Royal Oak Offshore Chronograph",
+        "nickname": "Offshore Ghost",
+        "reference_number": "26470IO.OO.A006CA.01",
+        "case_material": "Titanium",
+        "case_size": "42mm",
+        "dial_color": "Slate Grey Méga Tapisserie",
+        "bezel_material": "Grey Ceramic",
+        "movement": "Automatic Chronograph (Calibre 3126 / 3840)",
+        "power_reserve": "50 Hours",
+        "water_resistance": "100m",
+        "image": "images/ghost.jpg",
+        "description": "A robust, sporty chronograph featuring a ceramic bezel and slate grey Méga Tapisserie dial. Powered by the automatic Calibre 3126 / 3840 with a 50-hour power reserve, 42mm case diameter, and 100m water resistance."
+    },
+    {
+        "id": 11,
+        "brand": "Audemars Piguet",
+        "model": "Royal Oak Double Balance Wheel",
+        "nickname": "Skeleton Royal Oak",
+        "reference_number": "15407ST.OO.1220ST.01",
+        "case_material": "Stainless Steel",
+        "case_size": "41mm",
+        "dial_color": "Slate Grey Openworked Skeleton",
+        "bezel_material": "Stainless Steel with 8 Hexagonal Screws",
+        "movement": "Automatic (Calibre 3132)",
+        "power_reserve": "45 Hours",
+        "water_resistance": "50m",
+        "image": "images/skeletonro.jpg",
+        "description": "A high-complication horological piece featuring a patented dual balance wheel assembly visible through a skeletonized dial. Powered by the self-winding Calibre 3132 with a 45-hour power reserve, 41mm case diameter, and 50m water resistance."
+    },
+    {
+        "id": 12,
+        "brand": "Patek Philippe",
+        "model": "Aquanaut",
+        "nickname": "Jumbo Aquanaut",
+        "reference_number": "5167A-001",
+        "case_material": "Stainless Steel",
+        "case_size": "40.8mm",
+        "dial_color": "Black Embossed",
+        "bezel_material": "Satin-Brushed Stainless Steel",
+        "movement": "Automatic (Calibre 26-330 S C)",
+        "power_reserve": "45 Hours",
+        "water_resistance": "120m",
+        "image": "images/aquanaut.jpg",
+        "description": "A contemporary, dynamic sports timepiece featuring a black embossed dial and composite Tropical strap. Powered by the self-winding Calibre 26-330 S C with a 45-hour power reserve, 40.8mm case diameter, and 120m water resistance."
+    },
+    {
+        "id": 13,
+        "brand": "Patek Philippe",
+        "model": "Grand Complications",
+        "nickname": "Perpetual Calendar Chronograph",
+        "reference_number": "5270P-001",
+        "case_material": "Platinum",
+        "case_size": "41mm",
+        "dial_color": "Golden Opaline Salmon",
+        "bezel_material": "Polished Platinum",
+        "movement": "Manual-Wind Grand Complication (Calibre CH 29-535 PS Q)",
+        "power_reserve": "65 Hours",
+        "water_resistance": "30m",
+        "image": "images/perpetual.jpg",
+        "description": "An exquisite haute horlogerie grand complication featuring a perpetual calendar, moon phase, and salmon dial. Powered by the manual-wind Calibre CH 29-535 PS Q with a 65-hour power reserve, 41mm case diameter, and 30m water resistance."
+    },
+    {
+        "id": 14,
+        "brand": "Richard Mille",
+        "model": "RM 035",
+        "nickname": "Baby Nadal",
+        "reference_number": "RM 035-02",
+        "case_material": "Carbon TPT",
+        "case_size": "49.9mm x 44.5mm",
+        "dial_color": "Skeletonized Transparent",
+        "bezel_material": "Carbon TPT",
+        "movement": "Automatic (Calibre RMAL1)",
+        "power_reserve": "55 Hours",
+        "water_resistance": "50m",
+        "image": "images/babynadal.jpg",
+        "description": "An ultralight, high-shock sports watch developed alongside Rafael Nadal. Features a skeletonized movement and variable-geometry rotor, powered by the automatic Calibre RMAL1 with a 55-hour power reserve, 49.9mm x 44.5mm dimensions, and 50m water resistance."
+    },
+    {
+        "id": 15,
+        "brand": "Richard Mille",
+        "model": "RM 055",
+        "nickname": "Bubba Watson",
+        "reference_number": "RM 055",
+        "case_material": "Grade 5 Titanium with White Rubber Casing",
+        "case_size": "49.9mm x 42.7mm",
+        "dial_color": "Skeletonized Transparent",
+        "bezel_material": "ATZ White Ceramic",
+        "movement": "Manual-Wind (Calibre RMUL2)",
+        "power_reserve": "55 Hours",
+        "water_resistance": "30m",
+        "image": "images/bubbawatson.jpg",
+        "description": "A manual-wind skeletonized sports watch engineered to withstand extreme accelerations. Powered by the manual-wind Calibre RMUL2 with a 55-hour power reserve, 49.9mm x 42.7mm dimensions, and 30m water resistance."
+    },
+    {
+        "id": 16,
+        "brand": "Rolex",
+        "model": "Day-Date 40",
+        "nickname": "President",
+        "reference_number": "228238",
+        "case_material": "18k Yellow Gold",
+        "case_size": "40mm",
+        "dial_color": "Champagne",
+        "bezel_material": "Fluted 18k Yellow Gold",
+        "movement": "Automatic (Calibre 3255)",
+        "power_reserve": "70 Hours",
+        "water_resistance": "100m",
+        "image": "images/president.jpg",
+        "description": "The quintessential prestige watch featuring the iconic President bracelet and champagne dial with fluted bezel. Powered by the automatic Calibre 3255 with a 70-hour power reserve, 40mm case diameter, and 100m water resistance."
+    },
+    {
+        "id": 17,
+        "brand": "Omega",
+        "model": "Planet Ocean 600M",
+        "nickname": "Deep Black",
+        "reference_number": "215.92.46.22.01.001",
+        "case_material": "Black Ceramic",
+        "case_size": "45.5mm",
+        "dial_color": "Black Zirconium Dioxide Ceramic",
+        "bezel_material": "Unidirectional Black Ceramic with Liquidmetal Scale",
+        "movement": "Automatic GMT (Co-Axial Master Chronometer Calibre 8906)",
+        "power_reserve": "60 Hours",
+        "water_resistance": "600m",
+        "image": "images/planetocean.jpg",
+        "description": "A state-of-the-art diving watch combining GMT functionality with extreme depth rating in a solid black ceramic case. Powered by the automatic Co-Axial Master Chronometer Calibre 8906 with a 60-hour power reserve, 45.5mm case diameter, and 600m water resistance."
+    },
+    {
+        "id": 18,
+        "brand": "Audemars Piguet",
+        "model": "Royal Oak Chronograph",
+        "nickname": "ROC Panda",
+        "reference_number": "26331ST.OO.1220ST.03",
+        "case_material": "Stainless Steel",
+        "case_size": "41mm",
+        "dial_color": "Silver-Toned Grande Tapisserie with Black Counters",
+        "bezel_material": "Stainless Steel with 8 Hexagonal Screws",
+        "movement": "Automatic Integrated Chronograph (Calibre 2385)",
+        "power_reserve": "40 Hours",
+        "water_resistance": "50m",
+        "image": "images/rocpanda.jpg",
+        "description": "A sporty high-horology chronograph featuring a silver-toned Grande Tapisserie dial and contrasting black sub-dials. Powered by the self-winding Calibre 2385 with a 40-hour power reserve, 41mm case diameter, and 50m water resistance."
+    },
+    {
+        "id": 19,
+        "brand": "Patek Philippe",
+        "model": "Calatrava",
+        "nickname": "Clous de Paris",
+        "reference_number": "6119R-001",
+        "case_material": "18k Rose Gold",
+        "case_size": "39mm",
+        "dial_color": "Silvery Grained",
+        "bezel_material": "Guilloched Clous de Paris 18k Rose Gold",
+        "movement": "Manual-Wind (Calibre 30-255 PS)",
+        "power_reserve": "65 Hours",
+        "water_resistance": "30m",
+        "image": "images/calatrava.jpg",
+        "description": "The benchmark round dress watch featuring a refined guilloche hobnail bezel and silvery grained dial. Powered by the manual-wind Calibre 30-255 PS with a 65-hour power reserve, 39mm case diameter, and 30m water resistance."
+    },
+    {
+        "id": 20,
+        "brand": "Richard Mille",
+        "model": "RM 67-02",
+        "nickname": "Sprint",
+        "reference_number": "RM 67-02",
+        "case_material": "Carbon TPT and Quartz TPT",
+        "case_size": "38.7mm x 47.5mm",
+        "dial_color": "Skeletonized Transparent",
+        "bezel_material": "Quartz TPT",
+        "movement": "Automatic Extra-Flat (Calibre CRMA7)",
+        "power_reserve": "50 Hours",
+        "water_resistance": "30m",
+        "image": "images/rm6702.jpg",
+        "description": "An ultra-thin, featherweight athletic watch weighing just 32 grams including its seamless comfort strap. Powered by the automatic skeletonized Calibre CRMA7 with a 50-hour power reserve, 38.7mm x 47.5mm dimensions, and 50m water resistance."
+    }
+]
+
+@app.get("/")
+def home():
+    return {
+        "message": "Welcome to the Watch Gallery API!",
+        "endpoints": [
+            "/watches",
+            "/watches/{id}",
+            "/watches/search"
+        ]
+    }
+
+@app.get("/watches")
+def get_watches():
+    return {
+        "count": len(watches),
+        "watches": watches
+    }
+
+@app.get("/watches/search")
+def search_watches(q: str = Query("", min_length=0)):
+    if not q.strip():
+        return {
+            "query": "",
+            "count": len(watches),
+            "results": watches
+        }
+
+    query = q.lower().strip()
+    results = []
+    for watch in watches:
+        searchable_text = (
+            f"{watch['brand']} "
+            f"{watch['model']} "
+            f"{watch['nickname']} "
+            f"{watch['reference_number']} "
+            f"{watch['case_material']} "
+            f"{watch['case_size']} "
+            f"{watch['dial_color']} "
+            f"{watch['bezel_material']} "
+            f"{watch['movement']} "
+            f"{watch['power_reserve']} "
+            f"{watch['water_resistance']}"
+        ).lower()
+
+        if query in searchable_text:
+            results.append(watch)
+
+    return {
+        "query": q,
+        "count": len(results),
+        "results": results
+    }
+
+@app.get("/watches/{watch_id}")
+def get_watch(watch_id: int):
+    for watch in watches:
+        if watch["id"] == watch_id:
+            return watch
+
+    raise HTTPException(
+        status_code=404,
+        detail="Watch not found."
+    )
+
+
+
+
+
+
+
+
+app.js 
+const API_URL = "https://watch-api-eight.vercel.app";
+
+let allWatches = [];
+let featuredWatches = [];
+let currentHeroIndex = 0;
+let selectedBrand = "";
+let isHeroAnimating = false;
+
+// FETCH
+async function loadWatches() {
+    try {
+        const response = await fetch(`${API_URL}/watches`);
+        const data = await response.json();
+        allWatches = data.watches;
+        
+        featuredWatches = allWatches.slice(0, 5);
+        
+        displayWatches(allWatches);
+        if (featuredWatches.length > 0) {
+            updateHero(0);
+            triggerShimmer();
+        }
+    } catch (error) {
+        console.error(error);
+        document.getElementById("watchGrid").innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#3D3D3D;'>Unable to connect to the Horology API.</p>";
+    }
+}
+
+// RENDER GRID
+function displayWatches(watches) {
+    const grid = document.getElementById("watchGrid");
+    grid.innerHTML = "";
+
+    if (!watches || watches.length === 0) {
+        grid.innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#3D3D3D; padding: 40px 0;'>No timepieces found matching your selection.</p>";
+        return;
+    }
+
+    watches.forEach(watch => {
+        const card = document.createElement("div");
+        card.className = "watch-card";
+        card.onclick = () => openModal(watch);
+
+        card.innerHTML = `
+            <div class="card-top">
+                <img src="${watch.image}" alt="${watch.model}" onerror="this.src='https://placehold.co/300x300/336659/FDFDFD?text=${encodeURIComponent(watch.brand)}'">
+            </div>
+            <div class="card-bottom">
+                <p class="card-brand">${watch.brand}</p>
+                <h4 class="card-title">${watch.model} "${watch.nickname}"</h4>
+            </div>
+        `;
+
+        grid.appendChild(card);
+    });
+}
+
+// HERO UPDATE
+function updateHero(index) {
+    if (!featuredWatches || featuredWatches.length === 0) return;
+    currentHeroIndex = index;
+    const watch = featuredWatches[currentHeroIndex];
+
+    document.getElementById("heroBrand").innerText = watch.brand.toUpperCase();
+    document.getElementById("heroTitle").innerText = `${watch.model} "${watch.nickname}"`;
+    document.getElementById("heroDesc").innerText = watch.description;
+    document.getElementById("heroRef").innerText = `Ref. ${watch.reference_number}`;
+    document.getElementById("heroMaterial").innerText = watch.case_material;
+
+    const heroImg = document.getElementById("heroImage");
+    heroImg.src = watch.image;
+    heroImg.onerror = () => {
+        heroImg.src = `https://placehold.co/500x500/1F493D/F3EFE8?text=${encodeURIComponent(watch.model)}`;
+    };
+}
+
+// SHIMMER
+function triggerShimmer() {
+    const visual = document.querySelector(".hero-visual");
+    if (!visual) return;
+    visual.classList.remove("run-shimmer");
+    void visual.offsetWidth;
+    visual.classList.add("run-shimmer");
+}
+
+// DEPTH ZOOM TRANSITION
+function transitionHero(nextIndex, direction = "next") {
+    if (isHeroAnimating || !featuredWatches || featuredWatches.length === 0) return;
+    isHeroAnimating = true;
+
+    const heroImg = document.getElementById("heroImage");
+    const heroContent = document.querySelector(".hero-content");
+
+    const exitClass = direction === "next" ? "zoom-exit-left" : "zoom-exit-right";
+    heroImg.classList.add(exitClass);
+    heroContent.classList.add("text-exit");
+
+    setTimeout(() => {
+        updateHero(nextIndex);
+
+        heroImg.classList.remove(exitClass);
+        heroContent.classList.remove("text-exit");
+
+        const enterClass = direction === "next" ? "zoom-enter-right" : "zoom-enter-left";
+        heroImg.classList.add(enterClass);
+        heroContent.classList.add("text-enter");
+
+        void heroImg.offsetWidth;
+        void heroContent.offsetWidth;
+
+        heroImg.classList.remove(enterClass);
+        heroContent.classList.remove("text-enter");
+
+        setTimeout(() => {
+            triggerShimmer();
+            isHeroAnimating = false;
+        }, 500);
+    }, 280);
+}
+
+// HERO NAVIGATION
+function prevHeroWatch() {
+    if (featuredWatches.length === 0) return;
+    const prevIndex = (currentHeroIndex - 1 + featuredWatches.length) % featuredWatches.length;
+    transitionHero(prevIndex, "prev");
+}
+
+function nextHeroWatch() {
+    if (featuredWatches.length === 0) return;
+    const nextIndex = (currentHeroIndex + 1) % featuredWatches.length;
+    transitionHero(nextIndex, "next");
+}
+
+// SEARCH
+async function searchWatches() {
+    const query = document.getElementById("searchInput").value.trim();
+    
+    document.querySelectorAll(".brand-circle").forEach(btn => btn.classList.remove("active"));
+    selectedBrand = "";
+
+    if (!query) {
+        displayWatches(allWatches);
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/watches/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        displayWatches(data.results);
+    } catch (error) {
+        console.error(error);
+        alert("Search query failed.");
+    }
+}
+
+// BRAND FILTER
+function toggleBrandFilter(brandName, element) {
+    const isAlreadySelected = element.classList.contains("active");
+
+    document.querySelectorAll(".brand-circle").forEach(btn => btn.classList.remove("active"));
+    document.getElementById("searchInput").value = "";
+
+    if (isAlreadySelected) {
+        selectedBrand = "";
+        displayWatches(allWatches);
+    } else {
+        selectedBrand = brandName;
+        element.classList.add("active");
+        const filtered = allWatches.filter(w => w.brand.toLowerCase() === brandName.toLowerCase());
+        displayWatches(filtered);
+    }
+}
+
+// MODAL
+function openModal(watch) {
+    document.getElementById("modalBrand").innerText = watch.brand;
+    document.getElementById("modalTitle").innerText = watch.model;
+    document.getElementById("modalNickname").innerText = `"${watch.nickname}"`;
+    document.getElementById("modalRef").innerText = watch.reference_number;
+    document.getElementById("modalMaterial").innerText = watch.case_material;
+    document.getElementById("modalDescription").innerText = watch.description;
+
+    const modalImg = document.getElementById("modalImage");
+    modalImg.src = watch.image;
+    modalImg.onerror = () => {
+        modalImg.src = `https://placehold.co/400x400/336659/FDFDFD?text=${encodeURIComponent(watch.model)}`;
+    };
+
+    document.getElementById("detailModal").classList.add("open");
+}
+
+function closeModal() {
+    document.getElementById("detailModal").classList.remove("open");
+}
+
+function handleBackdropClick(event) {
+    if (event.target.id === "detailModal") {
+        closeModal();
+    }
+}
+
+// PARALLAX & SPOTLIGHT
+const heroSection = document.getElementById("hero");
+if (heroSection) {
+    heroSection.addEventListener("mousemove", (e) => {
+        if (isHeroAnimating) return;
+
+        const rect = heroSection.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        heroSection.style.setProperty("--mouse-x", `${mouseX}px`);
+        heroSection.style.setProperty("--mouse-y", `${mouseY}px`);
+
+        const percentX = (mouseX / rect.width) - 0.5;
+        const percentY = (mouseY / rect.height) - 0.5;
+
+        const heroImg = document.getElementById("heroImage");
+        if (heroImg) {
+            const shiftX = percentX * -24;
+            const shiftY = percentY * -24;
+            heroImg.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
+        }
+    });
+
+    heroSection.addEventListener("mouseleave", () => {
+        const heroImg = document.getElementById("heroImage");
+        if (heroImg && !isHeroAnimating) {
+            heroImg.style.transform = "translate(0px, 0px)";
+        }
+    });
+}
+
+// EVENTS
+document.getElementById("searchInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") searchWatches();
+});
+
+loadWatches();
+
+
+
+
+
+
+
+
+
+
+index.html 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Gallery</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="#hero" class="brand-logo">Watch Gallery</a>
+            <nav class="nav-links">
+                <a href="#hero">Home</a>
+                <a href="#collections">Collections</a>
+                <span class="nav-disabled">Contact</span>
+                <span class="nav-disabled">About Us</span>
+            </nav>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="hero-section">
+        <button class="hero-nav-btn prev-btn" onclick="prevHeroWatch()" aria-label="Previous Watch">&#10094;</button>
+        <button class="hero-nav-btn next-btn" onclick="nextHeroWatch()" aria-label="Next Watch">&#10095;</button>
+
+        <div class="hero-container">
+            <div class="hero-content">
+                <p class="hero-eyebrow" id="heroBrand">ROLEX</p>
+                <h1 class="hero-title" id="heroTitle">GMT-Master II "Pepsi"</h1>
+                <p class="hero-desc" id="heroDesc">An iconic dual-time pilot watch featuring a bidirectional red and blue Cerachrom ceramic bezel.</p>
+                <div class="hero-pills" id="heroPills">
+                    <span class="pill" id="heroRef">Ref. 126710BLRO</span>
+                    <span class="pill" id="heroMaterial">Oystersteel</span>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <img id="heroImage" src="images/pepsi.jpg" alt="Featured Watch" onerror="this.src='https://placehold.co/500x500/1F493D/F3EFE8?text=Featured+Watch'">
+            </div>
+        </div>
+    </section>
+
+    <!-- CATALOG SECTION -->
+    <section id="collections" class="catalog-section">
+        <div class="catalog-container">
+            
+            <!-- BRAND QUICK-SELECT -->
+            <div class="brand-filter-row">
+                <button class="brand-circle" onclick="toggleBrandFilter('Rolex', this)" title="Rolex">
+                    <img src="images/rolex.jpg" alt="Rolex" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">Rolex</span>
+                </button>
+                <button class="brand-circle" onclick="toggleBrandFilter('Omega', this)" title="Omega">
+                    <img src="images/omega.jpg" alt="Omega" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">Omega</span>
+                </button>
+                <button class="brand-circle" onclick="toggleBrandFilter('Audemars Piguet', this)" title="Audemars Piguet">
+                    <img src="images/ap.jpg" alt="Audemars Piguet" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">AP</span>
+                </button>
+                <button class="brand-circle" onclick="toggleBrandFilter('Patek Philippe', this)" title="Patek Philippe">
+                    <img src="images/patek.jpg" alt="Patek Philippe" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">Patek</span>
+                </button>
+                <button class="brand-circle" onclick="toggleBrandFilter('Richard Mille', this)" title="Richard Mille">
+                    <img src="images/rm.jpg" alt="Richard Mille" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <span class="brand-fallback-text">RM</span>
+                </button>
+            </div>
+
+            <!-- SEARCH BAR -->
+            <div class="search-bar-wrap">
+                <input type="text" id="searchInput" placeholder="Search...">
+                <button id="searchBtn" onclick="searchWatches()">SEARCH</button>
+            </div>
+
+            <!-- CATALOG GRID -->
+            <div id="watchGrid" class="watch-grid"></div>
+        </div>
+    </section>
+
+    <!-- WATCH DETAIL MODAL -->
+    <div id="detailModal" class="modal-overlay" onclick="handleBackdropClick(event)">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-body">
+                <div class="modal-image-col">
+                    <img id="modalImage" src="" alt="Watch Detail">
+                </div>
+                <div class="modal-info-col">
+                    <p class="modal-brand" id="modalBrand">BRAND</p>
+                    <h2 class="modal-title" id="modalTitle">Model Name</h2>
+                    <h3 class="modal-nickname" id="modalNickname">"Nickname"</h3>
+                    
+                    <div class="modal-meta">
+                        <p><strong>Reference Number:</strong> <span id="modalRef"></span></p>
+                        <p><strong>Case Material:</strong> <span id="modalMaterial"></span></p>
+                    </div>
+
+                    <div class="modal-divider"></div>
+                    <p class="modal-description" id="modalDescription"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+style.css
+/* BASE */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* NAVBAR */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 72px;
+    background-color: #1F493D;
+    z-index: 100;
+    border-bottom: 1px solid rgba(243, 239, 232, 0.1);
+}
+
+.nav-container {
+    max-width: 1400px;
+    height: 100%;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand-logo {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-size: 1.5rem;
+    color: #FDFDFD;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+}
+
+.nav-links a {
+    color: #F3EFE8;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: opacity 0.2s;
+}
+
+.nav-links a:hover {
+    opacity: 0.8;
+}
+
+.nav-disabled {
+    color: rgba(243, 239, 232, 0.4);
+    font-size: 0.95rem;
+    cursor: default;
+}
+
+/* HERO */
+.hero-section {
+    position: relative;
+    background-color: #1F493D;
+    background-image: radial-gradient(circle 500px at var(--mouse-x, 75%) var(--mouse-y, 50%), rgba(243, 239, 232, 0.12), transparent 80%);
+    color: #FDFDFD;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 72px 80px 24px;
+    overflow: hidden;
+}
+
+.hero-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: clamp(24px, 4vw, 64px);
+    align-items: center;
+    width: 100%;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-content {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    will-change: transform, opacity;
+}
+
+.hero-eyebrow {
+    font-size: clamp(0.75rem, 0.85vw, 0.9rem);
+    letter-spacing: 2px;
+    color: #F3EFE8;
+    opacity: 0.8;
+    margin-bottom: clamp(4px, 0.8vh, 10px);
+}
+
+.hero-title {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-size: clamp(2rem, 3.2vw, 3.4rem);
+    line-height: 1.12;
+    margin-bottom: clamp(10px, 1.8vh, 20px);
+}
+
+.hero-desc {
+    color: #F3EFE8;
+    font-size: clamp(0.9rem, 1vw, 1.05rem);
+    line-height: 1.55;
+    margin-bottom: clamp(14px, 2.2vh, 24px);
+    opacity: 0.9;
+    max-width: 540px;
+}
+
+.hero-pills {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.pill {
+    background: rgba(243, 239, 232, 0.15);
+    padding: clamp(4px, 0.6vh, 6px) clamp(10px, 1vw, 14px);
+    border-radius: 20px;
+    font-size: clamp(0.75rem, 0.8vw, 0.85rem);
+    color: #F3EFE8;
+}
+
+.hero-visual {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 10px;
+    height: 100%;
+}
+
+.hero-visual img {
+    max-width: 100%;
+    width: clamp(260px, 30vw, 440px);
+    max-height: min(58vh, 480px);
+    object-fit: contain;
+    filter: none;
+    transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+    will-change: transform, opacity;
+}
+
+/* DEPTH ZOOM TRANSITIONS */
+.hero-visual img.zoom-exit-left {
+    transform: translateX(-60px) scale(0.88);
+    opacity: 0;
+}
+
+.hero-visual img.zoom-exit-right {
+    transform: translateX(60px) scale(0.88);
+    opacity: 0;
+}
+
+.hero-content.text-exit {
+    transform: translateY(-15px);
+    opacity: 0;
+}
+
+.hero-visual img.zoom-enter-right {
+    transform: translateX(70px) scale(1.12) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
+.hero-visual img.zoom-enter-left {
+    transform: translateX(-70px) scale(1.12) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
+.hero-content.text-enter {
+    transform: translateY(20px) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
+/* CONTROLS */
+.hero-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #F3EFE8;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 16px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    z-index: 10;
+}
+
+.hero-nav-btn:hover {
+    opacity: 1;
+}
+
+.prev-btn { left: 20px; }
+.next-btn { right: 20px; }
+
+/* CATALOG */
+.catalog-section {
+    background-color: #F3EFE8;
+    padding: 70px 24px 100px;
+    min-height: 100vh;
+}
+
+.catalog-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* BRAND FILTER */
+.brand-filter-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 32px;
+    width: 100%;
+    margin: 0 auto 45px auto;
+    padding: 10px 0;
+}
+
+.brand-circle {
+    width: 105px;
+    height: 105px;
+    border-radius: 50%;
+    background-color: #336659;
+    color: #FDFDFD;
+    border: 2px solid transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 18px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.brand-circle:hover {
+    background-color: #1F493D;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(31, 73, 61, 0.28);
+}
+
+.brand-circle.active {
+    background-color: #1F493D;
+    border-color: #FDFDFD;
+    box-shadow: 0 0 0 3px #336659;
+    transform: scale(1.06);
+}
+
+.brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.brand-fallback-text {
+    display: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
+    color: #FDFDFD;
+}
+
+/* SEARCH */
+.search-bar-wrap {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 40px;
+}
+
+.search-bar-wrap input {
+    flex: 1;
+    padding: 16px 20px;
+    font-size: 1rem;
+    border: 1px solid #D5CEBF;
+    background-color: #FDFDFD;
+    border-radius: 4px;
+    color: #3D3D3D;
+    outline: none;
+}
+
+.search-bar-wrap input:focus {
+    border-color: #336659;
+}
+
+.search-bar-wrap button {
+    background-color: #336659;
+    color: #FDFDFD;
+    border: none;
+    padding: 0 32px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.search-bar-wrap button:hover {
+    background-color: #1F493D;
+}
+
+/* GRID */
+.watch-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+/* CARDS */
+.watch-card {
+    background-color: #FDFDFD;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.watch-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.card-top {
+    background-color: #336659;
+    border-radius: 6px;
+    height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.card-top img {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+    transition: transform 0.3s;
+}
+
+.watch-card:hover .card-top img {
+    transform: scale(1.05);
+}
+
+.card-bottom {
+    text-align: left;
+}
+
+.card-brand {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #336659;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.card-title {
+    font-size: 1rem;
+    color: #3D3D3D;
+    line-height: 1.3;
+}
+
+/* MODAL */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal-card {
+    background-color: #FDFDFD;
+    width: 100%;
+    max-width: 800px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.modal-close {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+    color: #3D3D3D;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+}
+
+.modal-image-col {
+    background-color: #336659;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.modal-image-col img {
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+}
+
+.modal-info-col {
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-brand {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #336659;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.modal-title {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-size: 1.6rem;
+    color: #3D3D3D;
+    margin-bottom: 2px;
+}
+
+.modal-nickname {
+    font-size: 1rem;
+    font-style: italic;
+    color: #666;
+    margin-bottom: 18px;
+}
+
+.modal-meta p {
+    font-size: 0.9rem;
+    color: #3D3D3D;
+    margin-bottom: 6px;
+}
+
+.modal-divider {
+    height: 1px;
+    background-color: #E6E0D5;
+    margin: 16px 0;
+}
+
+.modal-description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #4A4A4A;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .watch-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .hero-section {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        max-height: none;
+        padding: 90px 32px 50px;
+    }
+    .hero-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 28px;
+    }
+    .hero-desc {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .hero-pills {
+        justify-content: center;
+    }
+    .hero-visual img {
+        max-height: 40vh;
+        width: clamp(220px, 45vw, 340px);
+    }
+    .modal-body {
+        grid-template-columns: 1fr;
+    }
+    .brand-filter-row {
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .brand-circle {
+        width: 80px;
+        height: 80px;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .watch-grid {
+        grid-template-columns: 1fr;
+    }
+    .hero-section {
+        padding: 85px 20px 40px;
+    }
+    .hero-nav-btn {
+        padding: 8px;
+        font-size: 1.6rem;
+    }
+    .brand-filter-row {
+        gap: 10px;
+    }
+    .brand-circle {
+        width: 60px;
+        height: 60px;
+        padding: 10px;
+    }
+}

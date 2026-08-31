@@ -4,15 +4,15 @@ let allWatches = [];
 let featuredWatches = [];
 let currentHeroIndex = 0;
 let selectedBrand = "";
+let isHeroAnimating = false;
 
-// GET ALL WATCHES
+// FETCH
 async function loadWatches() {
     try {
         const response = await fetch(`${API_URL}/watches`);
         const data = await response.json();
         allWatches = data.watches;
         
-        // Hero slider
         featuredWatches = allWatches.slice(0, 5);
         
         displayWatches(allWatches);
@@ -25,7 +25,7 @@ async function loadWatches() {
     }
 }
 
-// RENDER GRID CARDS
+// RENDER GRID
 function displayWatches(watches) {
     const grid = document.getElementById("watchGrid");
     grid.innerHTML = "";
@@ -54,7 +54,7 @@ function displayWatches(watches) {
     });
 }
 
-// HERO DISPLAY CONTROLS
+// HERO UPDATE
 function updateHero(index) {
     if (!featuredWatches || featuredWatches.length === 0) return;
     currentHeroIndex = index;
@@ -73,19 +73,54 @@ function updateHero(index) {
     };
 }
 
+// DEPTH ZOOM TRANSITION
+function transitionHero(nextIndex, direction = "next") {
+    if (isHeroAnimating || !featuredWatches || featuredWatches.length === 0) return;
+    isHeroAnimating = true;
+
+    const heroImg = document.getElementById("heroImage");
+    const heroContent = document.querySelector(".hero-content");
+
+    const exitClass = direction === "next" ? "zoom-exit-left" : "zoom-exit-right";
+    heroImg.classList.add(exitClass);
+    heroContent.classList.add("text-exit");
+
+    setTimeout(() => {
+        updateHero(nextIndex);
+
+        heroImg.classList.remove(exitClass);
+        heroContent.classList.remove("text-exit");
+
+        const enterClass = direction === "next" ? "zoom-enter-right" : "zoom-enter-left";
+        heroImg.classList.add(enterClass);
+        heroContent.classList.add("text-enter");
+
+        void heroImg.offsetWidth;
+        void heroContent.offsetWidth;
+
+        heroImg.classList.remove(enterClass);
+        heroContent.classList.remove("text-enter");
+
+        setTimeout(() => {
+            isHeroAnimating = false;
+        }, 500);
+    }, 280);
+}
+
+// HERO NAVIGATION
 function prevHeroWatch() {
     if (featuredWatches.length === 0) return;
-    currentHeroIndex = (currentHeroIndex - 1 + featuredWatches.length) % featuredWatches.length;
-    updateHero(currentHeroIndex);
+    const prevIndex = (currentHeroIndex - 1 + featuredWatches.length) % featuredWatches.length;
+    transitionHero(prevIndex, "prev");
 }
 
 function nextHeroWatch() {
     if (featuredWatches.length === 0) return;
-    currentHeroIndex = (currentHeroIndex + 1) % featuredWatches.length;
-    updateHero(currentHeroIndex);
+    const nextIndex = (currentHeroIndex + 1) % featuredWatches.length;
+    transitionHero(nextIndex, "next");
 }
 
-// SEARCH FILTER
+// SEARCH
 async function searchWatches() {
     const query = document.getElementById("searchInput").value.trim();
     
@@ -107,7 +142,7 @@ async function searchWatches() {
     }
 }
 
-// BRAND FILTER TOGGLE
+// BRAND FILTER
 function toggleBrandFilter(brandName, element) {
     const isAlreadySelected = element.classList.contains("active");
 
@@ -125,7 +160,7 @@ function toggleBrandFilter(brandName, element) {
     }
 }
 
-// MODAL CONTROLS
+// MODAL
 function openModal(watch) {
     document.getElementById("modalBrand").innerText = watch.brand;
     document.getElementById("modalTitle").innerText = watch.model;
@@ -153,7 +188,22 @@ function handleBackdropClick(event) {
     }
 }
 
-// EVENT LISTENERS
+// PARALLAX & SPOTLIGHT
+const heroSection = document.getElementById("hero");
+if (heroSection) {
+    heroSection.addEventListener("mousemove", (e) => {
+        if (isHeroAnimating) return;
+
+        const rect = heroSection.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        heroSection.style.setProperty("--mouse-x", `${mouseX}px`);
+        heroSection.style.setProperty("--mouse-y", `${mouseY}px`);
+    });
+}
+
+// EVENTS
 document.getElementById("searchInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") searchWatches();
 });

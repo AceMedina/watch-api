@@ -12,18 +12,21 @@ html {
 
 /* NAVBAR */
 .navbar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
     width: 100%;
+    height: 72px;
     background-color: #1F493D;
     z-index: 100;
     border-bottom: 1px solid rgba(243, 239, 232, 0.1);
 }
 
 .nav-container {
-    max-width: 1200px;
+    max-width: 1400px;
+    height: 100%;
     margin: 0 auto;
-    padding: 18px 24px;
+    padding: 0 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -60,48 +63,65 @@ html {
     cursor: default;
 }
 
-/* HERO SECTION */
+/* HERO */
 .hero-section {
     position: relative;
     background-color: #1F493D;
+    background-image: radial-gradient(circle 500px at var(--mouse-x, 75%) var(--mouse-y, 50%), rgba(243, 239, 232, 0.12), transparent 80%);
     color: #FDFDFD;
-    min-height: 82vh;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
     display: flex;
     align-items: center;
-    padding: 60px 80px;
+    justify-content: center;
+    padding: 72px 80px 24px;
+    overflow: hidden;
 }
 
 .hero-container {
-    max-width: 1100px;
+    max-width: 1400px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 60px;
+    grid-template-columns: 1.15fr 1fr;
+    gap: clamp(24px, 4vw, 64px);
     align-items: center;
     width: 100%;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-content {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    will-change: transform, opacity;
 }
 
 .hero-eyebrow {
-    font-size: 0.85rem;
+    font-size: clamp(0.75rem, 0.85vw, 0.9rem);
     letter-spacing: 2px;
     color: #F3EFE8;
     opacity: 0.8;
-    margin-bottom: 8px;
+    margin-bottom: clamp(4px, 0.8vh, 10px);
 }
 
 .hero-title {
     font-family: 'Times New Roman', Georgia, serif;
-    font-size: 2.8rem;
-    line-height: 1.15;
-    margin-bottom: 18px;
+    font-size: clamp(2rem, 3.2vw, 3.4rem);
+    line-height: 1.12;
+    margin-bottom: clamp(10px, 1.8vh, 20px);
 }
 
 .hero-desc {
     color: #F3EFE8;
-    font-size: 1.05rem;
-    line-height: 1.6;
-    margin-bottom: 24px;
+    font-size: clamp(0.9rem, 1vw, 1.05rem);
+    line-height: 1.55;
+    margin-bottom: clamp(14px, 2.2vh, 24px);
     opacity: 0.9;
+    max-width: 540px;
 }
 
 .hero-pills {
@@ -112,28 +132,67 @@ html {
 
 .pill {
     background: rgba(243, 239, 232, 0.15);
-    padding: 6px 14px;
+    padding: clamp(4px, 0.6vh, 6px) clamp(10px, 1vw, 14px);
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: clamp(0.75rem, 0.8vw, 0.85rem);
     color: #F3EFE8;
 }
 
 .hero-visual {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
+    padding: 10px;
+    height: 100%;
 }
 
 .hero-visual img {
-    max-width: 380px;
-    max-height: 380px;
-    width: 100%;
+    max-width: 100%;
+    width: clamp(260px, 30vw, 440px);
+    max-height: min(58vh, 480px);
     object-fit: contain;
-    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.4));
-    transition: transform 0.3s ease;
+    filter: none;
+    transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease;
+    will-change: transform, opacity;
 }
 
-/* HERO CONTROLS */
+/* DEPTH ZOOM TRANSITIONS */
+.hero-visual img.zoom-exit-left {
+    transform: translateX(-60px) scale(0.88);
+    opacity: 0;
+}
+
+.hero-visual img.zoom-exit-right {
+    transform: translateX(60px) scale(0.88);
+    opacity: 0;
+}
+
+.hero-content.text-exit {
+    transform: translateY(-15px);
+    opacity: 0;
+}
+
+.hero-visual img.zoom-enter-right {
+    transform: translateX(70px) scale(1.12) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
+.hero-visual img.zoom-enter-left {
+    transform: translateX(-70px) scale(1.12) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
+.hero-content.text-enter {
+    transform: translateY(20px) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
+/* CONTROLS */
 .hero-nav-btn {
     position: absolute;
     top: 50%;
@@ -146,6 +205,7 @@ html {
     padding: 16px;
     opacity: 0.6;
     transition: opacity 0.2s;
+    z-index: 10;
 }
 
 .hero-nav-btn:hover {
@@ -155,7 +215,7 @@ html {
 .prev-btn { left: 20px; }
 .next-btn { right: 20px; }
 
-/* CATALOG SECTION */
+/* CATALOG */
 .catalog-section {
     background-color: #F3EFE8;
     padding: 70px 24px 100px;
@@ -167,7 +227,7 @@ html {
     margin: 0 auto;
 }
 
-/* BRAND FILTER BUTTONS */
+/* BRAND FILTER */
 .brand-filter-row {
     display: flex;
     justify-content: center;
@@ -223,7 +283,7 @@ html {
     color: #FDFDFD;
 }
 
-/* SEARCH BAR */
+/* SEARCH */
 .search-bar-wrap {
     display: flex;
     gap: 12px;
@@ -261,14 +321,14 @@ html {
     background-color: #1F493D;
 }
 
-/* GRID LAYOUT */
+/* GRID */
 .watch-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 24px;
 }
 
-/* WATCH CARD */
+/* CARDS */
 .watch-card {
     background-color: #FDFDFD;
     border-radius: 8px;
@@ -326,7 +386,7 @@ html {
     line-height: 1.3;
 }
 
-/* MODAL OVERLAY */
+/* MODAL */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -373,7 +433,6 @@ html {
     grid-template-columns: 1fr 1.2fr;
 }
 
-/* MODAL COLUMNS */
 .modal-image-col {
     background-color: #336659;
     display: flex;
@@ -440,12 +499,28 @@ html {
     .watch-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+    .hero-section {
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+        max-height: none;
+        padding: 90px 32px 50px;
+    }
     .hero-container {
         grid-template-columns: 1fr;
         text-align: center;
+        gap: 28px;
+    }
+    .hero-desc {
+        margin-left: auto;
+        margin-right: auto;
     }
     .hero-pills {
         justify-content: center;
+    }
+    .hero-visual img {
+        max-height: 40vh;
+        width: clamp(220px, 45vw, 340px);
     }
     .modal-body {
         grid-template-columns: 1fr;
@@ -466,7 +541,11 @@ html {
         grid-template-columns: 1fr;
     }
     .hero-section {
-        padding: 40px 20px;
+        padding: 85px 20px 40px;
+    }
+    .hero-nav-btn {
+        padding: 8px;
+        font-size: 1.6rem;
     }
     .brand-filter-row {
         gap: 10px;
