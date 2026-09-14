@@ -22,6 +22,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Watch Data Model
+class Watch(BaseModel):
+    id: int
+    brand: Literal["Rolex", "Omega", "Audemars Piguet", "Patek Philippe", "Richard Mille"]
+    model: str = Field(min_length=1)
+    nickname: str = Field(min_length=1)
+    reference_number: str = Field(min_length=1)
+    case_material: str = Field(min_length=1)
+    case_size_mm: float = Field(gt=0)
+    dial_color: str = Field(min_length=1)
+    bezel_material: str = Field(min_length=1)
+    movement_type: Literal["Automatic", "Manual-Wind"]
+    movement: str = Field(min_length=1)
+    power_reserve_hours: int = Field(gt=0)
+    water_resistance_m: int = Field(gt=0)
+    image: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+
 watches = [
     {
         "id": 1,
@@ -293,7 +311,7 @@ watches = [
         "power_reserve": "60 Hours",
         "water_resistance": "600m",
         "image": "images/planetocean.jpg",
-        "description": "A state-of-the-art diving watch combining GMT functionality with extreme depth rating in a solid black ceramic case. Powered by the automatic Co-Axial Master Chronometer Calibre 8906 with a 60-hour power reserve, 45.5mm case diameter, and 600m water resistance."
+        "description": "A state-of-the-art diving watch practical combining GMT functionality with extreme depth rating in a solid black ceramic case. Powered by the automatic Co-Axial Master Chronometer Calibre 8906 with a 60-hour power reserve, 45.5mm case diameter, and 600m water resistance."
     },
     {
         "id": 18,
