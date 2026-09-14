@@ -427,28 +427,20 @@ def get_watches():
         "watches": watches
     }
 
-@app.get("/api/v1/watches/search")
-def search_watches(q: str = Query("", min_length=0)):
-    if not q.strip():
-        return {
-            "query": "",
-            "count": len(watches),
-            "results": watches
-        }
-
+@app.get("/api/v1/watches/search", dependencies=[Depends(verify_api_key)])
+def search_watches(q: str = Query(..., min_length=1)):
     query = q.lower().strip()
     results = []
+
     for watch in watches:
         searchable_text = (
+            f"{watch['id']} "
             f"{watch['brand']} "
             f"{watch['model']} "
             f"{watch['nickname']} "
             f"{watch['reference_number']} "
             f"{watch['case_material']} "
-            f"{watch['dial_color']} "
-            f"{watch['bezel_material']} "
-            f"{watch['movement']} "
-            f"{watch['description']}"
+            f"{watch['dial_color']}"
         ).lower()
 
         if query in searchable_text:
