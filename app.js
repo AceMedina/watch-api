@@ -1,4 +1,9 @@
-const API_URL = "https://watch-api-eight.vercel.app";
+const API_URL = "https://watch-api-eight.vercel.app/api/v1";
+const API_KEY = "watch-api-001";
+
+const FETCH_OPTIONS = {
+    headers: { "x-api-key": API_KEY }
+};
 
 let allWatches = [];
 let featuredWatches = [];
@@ -9,7 +14,8 @@ let isHeroAnimating = false;
 // FETCH
 async function loadWatches() {
     try {
-        const response = await fetch(`${API_URL}/watches`);
+        const response = await fetch(`${API_URL}/watches`, FETCH_OPTIONS);
+        if (!response.ok) throw new Error("API request failed.");
         const data = await response.json();
         allWatches = data.watches;
         
@@ -64,7 +70,7 @@ function updateHero(index) {
     document.getElementById("heroTitle").innerText = `${watch.model} "${watch.nickname}"`;
     document.getElementById("heroDesc").innerText = watch.description;
     document.getElementById("heroRef").innerText = `Ref. ${watch.reference_number}`;
-    document.getElementById("heroMaterial").innerText = watch.case_material;
+    document.getElementById("heroMaterial").innerText = `${watch.case_material} • ${watch.case_size_mm}mm`;
 
     const heroImg = document.getElementById("heroImage");
     heroImg.src = watch.image;
@@ -133,7 +139,8 @@ async function searchWatches() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/watches/search?q=${encodeURIComponent(query)}`);
+        const response = await fetch(`${API_URL}/watches/search?q=${encodeURIComponent(query)}`, FETCH_OPTIONS);
+        if (!response.ok) throw new Error("Search request failed.");
         const data = await response.json();
         displayWatches(data.results);
     } catch (error) {
@@ -166,7 +173,7 @@ function openModal(watch) {
     document.getElementById("modalTitle").innerText = watch.model;
     document.getElementById("modalNickname").innerText = `"${watch.nickname}"`;
     document.getElementById("modalRef").innerText = watch.reference_number;
-    document.getElementById("modalMaterial").innerText = watch.case_material;
+    document.getElementById("modalMaterial").innerText = `${watch.case_material} (${watch.case_size_mm}mm)`;
     document.getElementById("modalDescription").innerText = watch.description;
 
     const modalImg = document.getElementById("modalImage");
