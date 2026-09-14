@@ -409,7 +409,18 @@ def home():
         ]
     }
 
-@app.get("/api/v1/watches")
+# Public Health Check
+@app.get("/health")
+def health_check():
+    return {
+        "status": "ok",
+        "service": "Simple Watch API",
+        "version": API_VERSION,
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    }
+
+# Protected Routes
+@app.get("/api/v1/watches", dependencies=[Depends(verify_api_key)])
 def get_watches():
     return {
         "count": len(watches),
@@ -449,7 +460,7 @@ def search_watches(q: str = Query("", min_length=0)):
         "results": results
     }
 
-@app.get("/api/v1/watches/{watch_id}")
+@app.get("/api/v1/watches/{watch_id}", response_model=Watch, dependencies=[Depends(verify_api_key)])
 def get_watch(watch_id: int):
     for watch in watches:
         if watch["id"] == watch_id:
