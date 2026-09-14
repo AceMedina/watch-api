@@ -1,10 +1,17 @@
-from fastapi import FastAPI, HTTPException, Header, Query
+from fastapi import FastAPI, HTTPException, Header, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime, timezone
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
+
+# Configuration
+API_KEY = "watch-api-001"
+API_VERSION = "1.0"
 
 app = FastAPI(
     title="Simple Watch API",
     description="A beginner-friendly REST API containing information about watches.",
-    version="1.0.0"
+    version=API_VERSION
 )
 
 app.add_middleware(
@@ -342,21 +349,23 @@ watches = [
 def home():
     return {
         "message": "Welcome to the Watch Gallery API!",
+        "version": API_VERSION,
         "endpoints": [
-            "/watches",
-            "/watches/{id}",
-            "/watches/search"
+            "/health",
+            "/api/v1/watches",
+            "/api/v1/watches/{id}",
+            "/api/v1/watches/search"
         ]
     }
 
-@app.get("/watches")
+@app.get("/api/v1/watches")
 def get_watches():
     return {
         "count": len(watches),
         "watches": watches
     }
 
-@app.get("/watches/search")
+@app.get("/api/v1/watches/search")
 def search_watches(q: str = Query("", min_length=0)):
     if not q.strip():
         return {
@@ -391,7 +400,7 @@ def search_watches(q: str = Query("", min_length=0)):
         "results": results
     }
 
-@app.get("/watches/{watch_id}")
+@app.get("/api/v1/watches/{watch_id}")
 def get_watch(watch_id: int):
     for watch in watches:
         if watch["id"] == watch_id:
