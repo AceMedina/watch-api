@@ -387,6 +387,15 @@ watches = [
 validated_watches = [Watch(**watch).model_dump() for watch in watches]
 watches = validated_watches
 
+# Authentication
+def verify_api_key(x_api_key: Optional[str] = Header(default=None)):
+    if x_api_key != API_KEY:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing API key."
+        )
+    return True
+
 @app.get("/")
 def home():
     return {
