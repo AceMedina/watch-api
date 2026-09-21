@@ -37,6 +37,9 @@ class Watch(BaseModel):
     movement: str = Field(min_length=1)
     power_reserve_hours: int = Field(gt=0)
     water_resistance_m: int = Field(gt=0)
+    bracelet: str = Field(min_length=1)
+    complications: int = Field(ge=0)
+    price_php: int = Field(gt=0)
     image: str = Field(min_length=1)
     description: str = Field(min_length=1)
 
@@ -55,6 +58,9 @@ watches = [
         "movement": "Calibre 3285",
         "power_reserve_hours": 70,
         "water_resistance_m": 100,
+        "bracelet": "Jubilee",
+        "complications": 2,
+        "price_php": 650000,
         "image": "images/pepsi.jpg",
         "description": "An iconic dual-time pilot watch featuring a bidirectional red and blue Cerachrom ceramic bezel. Powered by the automatic Calibre 3285 movement with a 70-hour power reserve, 40mm case diameter, and 100m water resistance."
     },
@@ -72,6 +78,9 @@ watches = [
         "movement": "Co-Axial Master Chronometer Calibre 3861",
         "power_reserve_hours": 50,
         "water_resistance_m": 50,
+        "bracelet": "Speedmaster Stainless Steel Bracelet",
+        "complications": 2,
+        "price_php": 430000,
         "image": "images/moonwatch.jpg",
         "description": "The legendary chronograph flight-qualified by NASA for all manned space missions. Powered by the manual-wind Co-Axial Master Chronometer Calibre 3861 with a 50-hour power reserve, 42mm case diameter, and 50m water resistance."
     },
@@ -89,6 +98,9 @@ watches = [
         "movement": "Calibre 7121",
         "power_reserve_hours": 55,
         "water_resistance_m": 50,
+        "bracelet": "Royal Oak Integrated Stainless Steel Bracelet",
+        "complications": 1,
+        "price_php": 1950000,
         "image": "images/jumbo.jpg",
         "description": "An iconic luxury sports watch featuring an integrated bracelet and signature Petite Tapisserie blue dial. Powered by the self-winding Calibre 7121 with a 55-hour power reserve, 39mm case diameter, 8.1mm thickness, and 50m water resistance."
     },
@@ -106,6 +118,9 @@ watches = [
         "movement": "Calibre 26-330 S C",
         "power_reserve_hours": 45,
         "water_resistance_m": 120,
+        "bracelet": "Nautilus Integrated Stainless Steel Bracelet",
+        "complications": 1,
+        "price_php": 1980000,
         "image": "images/nautilus.jpg",
         "description": "A prestigious luxury sports watch defined by its rounded octagonal bezel and horizontally embossed blue dial. Powered by the self-winding Calibre 26-330 S C with a 45-hour power reserve, 40mm case diameter, and 120m water resistance."
     },
@@ -123,6 +138,9 @@ watches = [
         "movement": "Flyback Chronograph Calibre RMAC1",
         "power_reserve_hours": 50,
         "water_resistance_m": 50,
+        "bracelet": "Ventilated Rubber Strap",
+        "complications": 4,
+        "price_php": 9500000,
         "image": "images/rm011.jpg",
         "description": "An avant-garde motorsport timepiece featuring a flyback chronograph and annual calendar in a signature tonneau case. Powered by the automatic skeletonized Calibre RMAC1 with a 50-hour power reserve, 50mm x 40mm dimensions, and 50m water resistance."
     },
@@ -140,6 +158,9 @@ watches = [
         "movement": "Calibre 3235",
         "power_reserve_hours": 70,
         "water_resistance_m": 300,
+        "bracelet": "Oyster",
+        "complications": 1,
+        "price_php": 620000,
         "image": "images/kermit.jpg",
         "description": "A benchmark divers watch featuring a green unidirectional Cerachrom bezel and black dial. Powered by the automatic Calibre 3235 movement with a 70-hour power reserve, 41mm case diameter, and 300m water resistance."
     },
@@ -157,6 +178,9 @@ watches = [
         "movement": "Chronograph Calibre 4131",
         "power_reserve_hours": 72,
         "water_resistance_m": 100,
+        "bracelet": "Oyster",
+        "complications": 2,
+        "price_php": 880000,
         "image": "images/panda.jpg",
         "description": "A celebrated racing chronograph with a white lacquer dial and black Cerachrom tachymetric bezel. Powered by the automatic Calibre 4131 movement with a 72-hour power reserve, 40mm case diameter, and 100m water resistance."
     },
@@ -174,6 +198,9 @@ watches = [
         "movement": "Co-Axial Master Chronometer Calibre 8806",
         "power_reserve_hours": 55,
         "water_resistance_m": 300,
+        "bracelet": "Titanium Mesh Bracelet",
+        "complications": 0,
+        "price_php": 610000,
         "image": "images/nttd.jpg",
         "description": "The military-inspired 007 edition timepiece featuring a tropical brown aluminum dial and titanium mesh bracelet. Powered by the automatic Co-Axial Master Chronometer Calibre 8806 with a 55-hour power reserve, 42mm case diameter, and 300m water resistance."
     },
@@ -191,6 +218,9 @@ watches = [
         "movement": "Co-Axial Master Chronometer Calibre 8800",
         "power_reserve_hours": 55,
         "water_resistance_m": 150,
+        "bracelet": "Stainless Steel Bracelet with Rounded Links",
+        "complications": 1,
+        "price_php": 390000,
         "image": "images/terracotta.jpg",
         "description": "A versatile luxury sports watch featuring a sun-brushed terracotta-colored brass dial. Powered by the automatic Co-Axial Master Chronometer Calibre 8800 with a 55-hour power reserve, 38mm case diameter, and 150m water resistance."
     },
@@ -208,6 +238,9 @@ watches = [
         "movement": "Chronograph Calibre 3126 / 3840",
         "power_reserve_hours": 50,
         "water_resistance_m": 100,
+        "bracelet": "Grey Rubber Strap",
+        "complications": 3,
+        "price_php": 1850000,
         "image": "images/ghost.jpg",
         "description": "A robust, sporty chronograph featuring a ceramic bezel and slate grey Méga Tapisserie dial. Powered by the automatic Calibre 3126 / 3840 with a 50-hour power reserve, 42mm case diameter, and 100m water resistance."
     },
@@ -225,6 +258,9 @@ watches = [
         "movement": "Calibre 3132",
         "power_reserve_hours": 45,
         "water_resistance_m": 50,
+        "bracelet": "Royal Oak Integrated Stainless Steel Bracelet",
+        "complications": 0,
+        "price_php": 4150000,
         "image": "images/skeletonro.jpg",
         "description": "A high-complication horological piece featuring a patented dual balance wheel assembly visible through a skeletonized dial. Powered by the self-winding Calibre 3132 with a 45-hour power reserve, 41mm case diameter, and 50m water resistance."
     },
@@ -242,6 +278,9 @@ watches = [
         "movement": "Calibre 26-330 S C",
         "power_reserve_hours": 45,
         "water_resistance_m": 120,
+        "bracelet": "Black Composite Tropical Strap",
+        "complications": 1,
+        "price_php": 1390000,
         "image": "images/aquanaut.jpg",
         "description": "A contemporary, dynamic sports timepiece featuring a black embossed dial and composite Tropical strap. Powered by the self-winding Calibre 26-330 S C with a 45-hour power reserve, 40.8mm case diameter, and 120m water resistance."
     },
@@ -259,6 +298,9 @@ watches = [
         "movement": "Calibre CH 29-535 PS Q",
         "power_reserve_hours": 65,
         "water_resistance_m": 30,
+        "bracelet": "Shiny Chocolate Brown Alligator Leather Strap",
+        "complications": 5,
+        "price_php": 12200000,
         "image": "images/perpetual.jpg",
         "description": "An exquisite haute horlogerie grand complication featuring a perpetual calendar, moon phase, and salmon dial. Powered by the manual-wind Calibre CH 29-535 PS Q with a 65-hour power reserve, 41mm case diameter, and 30m water resistance."
     },
@@ -276,6 +318,9 @@ watches = [
         "movement": "Calibre RMAL1",
         "power_reserve_hours": 55,
         "water_resistance_m": 50,
+        "bracelet": "Black Rubber Strap",
+        "complications": 0,
+        "price_php": 9200000,
         "image": "images/babynadal.jpg",
         "description": "An ultralight, high-shock sports watch developed alongside Rafael Nadal. Features a skeletonized movement and variable-geometry rotor, powered by the automatic Calibre RMAL1 with a 55-hour power reserve, 49.9mm x 44.5mm dimensions, and 50m water resistance."
     },
@@ -293,6 +338,9 @@ watches = [
         "movement": "Calibre RMUL2",
         "power_reserve_hours": 55,
         "water_resistance_m": 30,
+        "bracelet": "White Rubber Strap",
+        "complications": 0,
+        "price_php": 7500000,
         "image": "images/bubbawatson.jpg",
         "description": "A manual-wind skeletonized sports watch engineered to withstand extreme accelerations. Powered by the manual-wind Calibre RMUL2 with a 55-hour power reserve, 49.9mm x 42.7mm dimensions, and 30m water resistance."
     },
@@ -310,6 +358,9 @@ watches = [
         "movement": "Calibre 3255",
         "power_reserve_hours": 70,
         "water_resistance_m": 100,
+        "bracelet": "President",
+        "complications": 2,
+        "price_php": 2250000,
         "image": "images/president.jpg",
         "description": "The quintessential prestige watch featuring the iconic President bracelet and champagne dial with fluted bezel. Powered by the automatic Calibre 3255 with a 70-hour power reserve, 40mm case diameter, and 100m water resistance."
     },
@@ -327,6 +378,9 @@ watches = [
         "movement": "Co-Axial Master Chronometer Calibre 8906",
         "power_reserve_hours": 60,
         "water_resistance_m": 600,
+        "bracelet": "Black Rubber Strap with Contrast Stitching",
+        "complications": 3,
+        "price_php": 740000,
         "image": "images/planetocean.jpg",
         "description": "A state-of-the-art diving watch combining GMT functionality with extreme depth rating in a solid black ceramic case. Powered by the automatic Co-Axial Master Chronometer Calibre 8906 with a 60-hour power reserve, 45.5mm case diameter, and 600m water resistance."
     },
@@ -344,6 +398,9 @@ watches = [
         "movement": "Chronograph Calibre 2385",
         "power_reserve_hours": 40,
         "water_resistance_m": 50,
+        "bracelet": "Royal Oak Integrated Stainless Steel Bracelet",
+        "complications": 2,
+        "price_php": 1800000,
         "image": "images/rocpanda.jpg",
         "description": "A sporty high-horology chronograph featuring a silver-toned Grande Tapisserie dial and contrasting black sub-dials. Powered by the self-winding Calibre 2385 with a 40-hour power reserve, 41mm case diameter, and 50m water resistance."
     },
@@ -361,6 +418,9 @@ watches = [
         "movement": "Calibre 30-255 PS",
         "power_reserve_hours": 65,
         "water_resistance_m": 30,
+        "bracelet": "Shiny Chocolate Brown Alligator Leather Strap",
+        "complications": 1,
+        "price_php": 1820000,
         "image": "images/calatrava.jpg",
         "description": "The benchmark round dress watch featuring a refined guilloche hobnail bezel and silvery grained dial. Powered by the manual-wind Calibre 30-255 PS with a 65-hour power reserve, 39mm case diameter, and 30m water resistance."
     },
@@ -378,6 +438,9 @@ watches = [
         "movement": "Calibre CRMA7",
         "power_reserve_hours": 50,
         "water_resistance_m": 30,
+        "bracelet": "Seamless Elastic Comfort Strap",
+        "complications": 0,
+        "price_php": 8200000,
         "image": "images/rm6702.jpg",
         "description": "An ultra-thin, featherweight athletic watch weighing just 32 grams including its seamless comfort strap. Powered by the automatic skeletonized Calibre CRMA7 with a 50-hour power reserve, 38.7mm x 47.5mm dimensions, and 50m water resistance."
     }
