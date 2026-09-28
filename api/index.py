@@ -5,7 +5,11 @@ from pydantic import BaseModel, Field
 from typing import Optional, Literal
 
 # Configuration
-API_KEY = "watch-api-001"
+VALID_API_KEYS = {
+    "watch-api-001": "Watch Gallery",
+    "chronicle-api-002": "Chronicle Game"
+}
+
 API_VERSION = "1.0"
 
 app = FastAPI(
@@ -473,7 +477,7 @@ watches = validated_watches
 
 # Authentication
 def verify_api_key(x_api_key: Optional[str] = Header(default=None)):
-    if x_api_key != API_KEY:
+    if not x_api_key or x_api_key not in VALID_API_KEYS:
         raise HTTPException(
             status_code=401,
             detail="Invalid or missing API key."
