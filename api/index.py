@@ -7,7 +7,8 @@ from typing import Optional, Literal
 # Configuration
 VALID_API_KEYS = {
     "watch-api-001": "Watch Gallery",
-    "chronicle-api-002": "Chronicle Game"
+    "chronicle-api-002": "Chronicle Game",
+    "broke-oclock-003": "Broke O'Clock"
 }
 
 API_VERSION = "1.0"
