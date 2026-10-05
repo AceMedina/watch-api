@@ -35,9 +35,13 @@
                     <span class="pill" id="heroRef">Ref. 126710BLRO</span>
                     <span class="pill" id="heroMaterial">Oystersteel</span>
                 </div>
+                <!-- Description Accent Line -->
+                <div class="hero-desc-line"></div>
             </div>
             <div class="hero-visual">
                 <img id="heroImage" src="images/pepsi.jpg" alt="Featured Watch" onerror="this.src='https://placehold.co/500x500/1F493D/F3EFE8?text=Featured+Watch'">
+                <!-- Numbering Folio Below Watch -->
+                <div class="hero-pagination" id="heroPagination">N° 01 / 05</div>
             </div>
         </div>
     </section>
@@ -72,11 +76,11 @@
 
             <!-- SEARCH BAR -->
             <div class="search-bar-wrap">
-                <input type="text" id="searchInput" placeholder="Search...">
+                <input type="text" id="searchInput" placeholder="Search watch...">
                 <button id="searchBtn" onclick="searchWatches()">SEARCH</button>
             </div>
 
-            <!-- CATALOG GRID -->
+            <!-- CATALOG GRID (Renders all 30 watches dynamically) -->
             <div id="watchGrid" class="watch-grid"></div>
         </div>
     </section>
@@ -97,6 +101,13 @@
                     <div class="modal-meta">
                         <p><strong>Reference Number:</strong> <span id="modalRef"></span></p>
                         <p><strong>Case Material:</strong> <span id="modalMaterial"></span></p>
+                        <p><strong>Case Size:</strong> <span id="modalSize"></span></p>
+                        <p><strong>Dial:</strong> <span id="modalDial"></span></p>
+                        <p><strong>Movement:</strong> <span id="modalMovement"></span></p>
+                        <p><strong>Power Reserve:</strong> <span id="modalPower"></span></p>
+                        <p><strong>Water Resistance:</strong> <span id="modalWR"></span></p>
+                        <p><strong>Category / Year:</strong> <span id="modalCatYear"></span></p>
+                        <p><strong>Price:</strong> <span id="modalPrice"></span></p>
                     </div>
 
                     <div class="modal-divider"></div>

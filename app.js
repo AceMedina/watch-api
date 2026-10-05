@@ -1,8 +1,9 @@
-const API_URL = "https://watch-api-eight.vercel.app/api/v1";
-const API_KEY = "watch-api-001";
+const API_URL = "https://watch-api-eight.vercel.app";
 
-const FETCH_OPTIONS = {
-    headers: { "x-api-key": API_KEY }
+// Include API Key header if using the protected /api/v1/ routes
+const API_KEY = "watch-api-001";
+const requestHeaders = {
+    "x-api-key": API_KEY
 };
 
 let allWatches = [];
@@ -11,16 +12,22 @@ let currentHeroIndex = 0;
 let selectedBrand = "";
 let isHeroAnimating = false;
 
-// FETCH
+// FETCH WATCHES
 async function loadWatches() {
     try {
-        const response = await fetch(`${API_URL}/watches`, FETCH_OPTIONS);
-        if (!response.ok) throw new Error("API request failed.");
+        // Tries standard endpoint first, falls back to /api/v1/watches
+        let response = await fetch(`${API_URL}/watches`);
+        if (!response.ok) {
+            response = await fetch(`${API_URL}/api/v1/watches`, { headers: requestHeaders });
+        }
+
         const data = await response.json();
         allWatches = data.watches;
         
+        // Hero takes the first 5 watches
         featuredWatches = allWatches.slice(0, 5);
         
+        // Displays all 30 watches into the catalog grid
         displayWatches(allWatches);
         if (featuredWatches.length > 0) {
             updateHero(0);
@@ -31,7 +38,7 @@ async function loadWatches() {
     }
 }
 
-// RENDER GRID
+// RENDER GRID (ALL 30 WATCHES)
 function displayWatches(watches) {
     const grid = document.getElementById("watchGrid");
     grid.innerHTML = "";
@@ -70,13 +77,21 @@ function updateHero(index) {
     document.getElementById("heroTitle").innerText = `${watch.model} "${watch.nickname}"`;
     document.getElementById("heroDesc").innerText = watch.description;
     document.getElementById("heroRef").innerText = `Ref. ${watch.reference_number}`;
-    document.getElementById("heroMaterial").innerText = `${watch.case_material} • ${watch.case_size_mm}mm`;
+    document.getElementById("heroMaterial").innerText = watch.case_material;
 
     const heroImg = document.getElementById("heroImage");
     heroImg.src = watch.image;
     heroImg.onerror = () => {
         heroImg.src = `https://placehold.co/500x500/1F493D/F3EFE8?text=${encodeURIComponent(watch.model)}`;
     };
+
+    // Numbering Folio
+    const heroPagination = document.getElementById("heroPagination");
+    if (heroPagination) {
+        const currentNum = String(currentHeroIndex + 1).padStart(2, '0');
+        const totalNum = String(featuredWatches.length).padStart(2, '0');
+        heroPagination.innerText = `N° ${currentNum} / ${totalNum}`;
+    }
 }
 
 // DEPTH ZOOM TRANSITION
@@ -139,17 +154,26 @@ async function searchWatches() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/watches/search?q=${encodeURIComponent(query)}`, FETCH_OPTIONS);
-        if (!response.ok) throw new Error("Search request failed.");
+        let response = await fetch(`${API_URL}/watches/search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+            response = await fetch(`${API_URL}/api/v1/watches/search?q=${encodeURIComponent(query)}`, { headers: requestHeaders });
+        }
         const data = await response.json();
         displayWatches(data.results);
     } catch (error) {
-        console.error(error);
-        alert("Search query failed.");
+        // Fallback local client search across all 30 watches
+        const filtered = allWatches.filter(w => 
+            w.brand.toLowerCase().includes(query.toLowerCase()) ||
+            w.model.toLowerCase().includes(query.toLowerCase()) ||
+            w.nickname.toLowerCase().includes(query.toLowerCase()) ||
+            w.reference_number.toLowerCase().includes(query.toLowerCase()) ||
+            (w.category && w.category.toLowerCase().includes(query.toLowerCase()))
+        );
+        displayWatches(filtered);
     }
 }
 
-// BRAND FILTER
+// BRAND FILTER (Filters across all 30 watches)
 function toggleBrandFilter(brandName, element) {
     const isAlreadySelected = element.classList.contains("active");
 
@@ -167,14 +191,32 @@ function toggleBrandFilter(brandName, element) {
     }
 }
 
-// MODAL
+// MODAL (Populates full technical details for 30 watches)
 function openModal(watch) {
     document.getElementById("modalBrand").innerText = watch.brand;
     document.getElementById("modalTitle").innerText = watch.model;
     document.getElementById("modalNickname").innerText = `"${watch.nickname}"`;
     document.getElementById("modalRef").innerText = watch.reference_number;
-    document.getElementById("modalMaterial").innerText = `${watch.case_material} (${watch.case_size_mm}mm)`;
+    document.getElementById("modalMaterial").innerText = watch.case_material;
     document.getElementById("modalDescription").innerText = watch.description;
+
+    // Additional fields from expanded 30-watch dataset
+    const sizeVal = watch.case_size_mm ? `${watch.case_size_mm} mm` : (watch.case_size || "N/A");
+    document.getElementById("modalSize").innerText = sizeVal;
+    document.getElementById("modalDial").innerText = watch.dial_color || "N/A";
+    document.getElementById("modalMovement").innerText = watch.movement || "N/A";
+
+    const powerVal = watch.power_reserve_hours ? `${watch.power_reserve_hours} Hours` : (watch.power_reserve || "N/A");
+    document.getElementById("modalPower").innerText = powerVal;
+
+    const wrVal = watch.water_resistance_m ? `${watch.water_resistance_m} m` : (watch.water_resistance || "N/A");
+    document.getElementById("modalWR").innerText = wrVal;
+
+    const catYear = `${watch.category || "Luxury"} (${watch.year || "Classic"})`;
+    document.getElementById("modalCatYear").innerText = catYear;
+
+    const priceFormatted = watch.price_php ? `₱${watch.price_php.toLocaleString()}` : "Price upon request";
+    document.getElementById("modalPrice").innerText = priceFormatted;
 
     const modalImg = document.getElementById("modalImage");
     modalImg.src = watch.image;
@@ -207,6 +249,23 @@ if (heroSection) {
 
         heroSection.style.setProperty("--mouse-x", `${mouseX}px`);
         heroSection.style.setProperty("--mouse-y", `${mouseY}px`);
+
+        const percentX = (mouseX / rect.width) - 0.5;
+        const percentY = (mouseY / rect.height) - 0.5;
+
+        const heroImg = document.getElementById("heroImage");
+        if (heroImg) {
+            const shiftX = percentX * -24;
+            const shiftY = percentY * -24;
+            heroImg.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
+        }
+    });
+
+    heroSection.addEventListener("mouseleave", () => {
+        const heroImg = document.getElementById("heroImage");
+        if (heroImg && !isHeroAnimating) {
+            heroImg.style.transform = "translate(0px, 0px)";
+        }
     });
 }
 
