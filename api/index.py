@@ -67,7 +67,7 @@ watches = [
         "year": 2018,
         "origin": "Switzerland",
         "category": "GMT",
-        "price_php": 650000,
+        "price_php": 1150000,
         "image": "images/pepsi.jpg",
         "description": "An iconic dual-time pilot watch featuring a bidirectional red and blue Cerachrom ceramic bezel. Powered by the automatic Calibre 3285 movement with a 70-hour power reserve, 40mm case diameter, and 100m water resistance."
     },
@@ -88,7 +88,7 @@ watches = [
         "year": 2021,
         "origin": "Switzerland",
         "category": "Chronograph",
-        "price_php": 430000,
+        "price_php": 480000,
         "image": "images/moonwatch.jpg",
         "description": "The legendary chronograph flight-qualified by NASA for all manned space missions. Powered by the manual-wind Co-Axial Master Chronometer Calibre 3861 with a 50-hour power reserve, 42mm case diameter, and 50m water resistance."
     },
@@ -109,7 +109,7 @@ watches = [
         "year": 2022,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 1950000,
+        "price_php": 4600000,
         "image": "images/jumbo.jpg",
         "description": "An iconic luxury sports watch featuring an integrated bracelet and signature Petite Tapisserie blue dial. Powered by the self-winding Calibre 7121 with a 55-hour power reserve, 39mm case diameter, 8.1mm thickness, and 50m water resistance."
     },
@@ -130,7 +130,7 @@ watches = [
         "year": 2006,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 1980000,
+        "price_php": 6200000,
         "image": "images/nautilus.jpg",
         "description": "A prestigious luxury sports watch defined by its rounded octagonal bezel and horizontally embossed blue dial. Powered by the self-winding Calibre 26-330 S C with a 45-hour power reserve, 40mm case diameter, and 120m water resistance."
     },
@@ -151,7 +151,7 @@ watches = [
         "year": 2007,
         "origin": "Switzerland",
         "category": "Chronograph",
-        "price_php": 9500000,
+        "price_php": 13800000,
         "image": "images/rm011.jpg",
         "description": "An avant-garde motorsport timepiece featuring a flyback chronograph and annual calendar in a signature tonneau case. Powered by the automatic skeletonized Calibre RMAC1 with a 50-hour power reserve, 50mm x 40mm dimensions, and 50m water resistance."
     },
@@ -172,7 +172,7 @@ watches = [
         "year": 2020,
         "origin": "Switzerland",
         "category": "Diver",
-        "price_php": 620000,
+        "price_php": 880000,
         "image": "images/kermit.jpg",
         "description": "A benchmark divers watch featuring a green unidirectional Cerachrom bezel and black dial. Powered by the automatic Calibre 3235 movement with a 70-hour power reserve, 41mm case diameter, and 300m water resistance."
     },
@@ -193,7 +193,7 @@ watches = [
         "year": 2023,
         "origin": "Switzerland",
         "category": "Chronograph",
-        "price_php": 880000,
+        "price_php": 1850000,
         "image": "images/panda.jpg",
         "description": "A celebrated racing chronograph with a white lacquer dial and black Cerachrom tachymetric bezel. Powered by the automatic Calibre 4131 movement with a 72-hour power reserve, 40mm case diameter, and 100m water resistance."
     },
@@ -214,7 +214,7 @@ watches = [
         "year": 2020,
         "origin": "Switzerland",
         "category": "Diver",
-        "price_php": 610000,
+        "price_php": 580000,
         "image": "images/nttd.jpg",
         "description": "The military-inspired 007 edition timepiece featuring a tropical brown aluminum dial and titanium mesh bracelet. Powered by the automatic Co-Axial Master Chronometer Calibre 8806 with a 55-hour power reserve, 42mm case diameter, and 300m water resistance."
     },
@@ -235,7 +235,7 @@ watches = [
         "year": 2022,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 390000,
+        "price_php": 395000,
         "image": "images/terracotta.jpg",
         "description": "A versatile luxury sports watch featuring a sun-brushed terracotta-colored brass dial. Powered by the automatic Co-Axial Master Chronometer Calibre 8800 with a 55-hour power reserve, 38mm case diameter, and 150m water resistance."
     },
@@ -256,7 +256,7 @@ watches = [
         "year": 2018,
         "origin": "Switzerland",
         "category": "Chronograph",
-        "price_php": 1850000,
+        "price_php": 2100000,
         "image": "images/ghost.jpg",
         "description": "A robust, sporty chronograph featuring a ceramic bezel and slate grey Méga Tapisserie dial. Powered by the automatic Calibre 3126 / 3840 with a 50-hour power reserve, 42mm case diameter, and 100m water resistance."
     },
@@ -277,7 +277,7 @@ watches = [
         "year": 2016,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 4150000,
+        "price_php": 6800000,
         "image": "images/skeletonro.jpg",
         "description": "A high-complication horological piece featuring a patented dual balance wheel assembly visible through a skeletonized dial. Powered by the self-winding Calibre 3132 with a 45-hour power reserve, 41mm case diameter, and 50m water resistance."
     },
@@ -298,7 +298,7 @@ watches = [
         "year": 2007,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 1390000,
+        "price_php": 3100000,
         "image": "images/aquanaut.jpg",
         "description": "A contemporary, dynamic sports timepiece featuring a black embossed dial and composite Tropical strap. Powered by the self-winding Calibre 26-330 S C with a 45-hour power reserve, 40.8mm case diameter, and 120m water resistance."
     },
@@ -319,7 +319,7 @@ watches = [
         "year": 2018,
         "origin": "Switzerland",
         "category": "Dress",
-        "price_php": 12200000,
+        "price_php": 11500000,
         "image": "images/perpetual.jpg",
         "description": "An exquisite haute horlogerie grand complication featuring a perpetual calendar, moon phase, and salmon dial. Powered by the manual-wind Calibre CH 29-535 PS Q with a 65-hour power reserve, 41mm case diameter, and 30m water resistance."
     },
@@ -340,7 +340,7 @@ watches = [
         "year": 2016,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 9200000,
+        "price_php": 17500000,
         "image": "images/babynadal.jpg",
         "description": "An ultralight, high-shock sports watch developed alongside Rafael Nadal. Features a skeletonized movement and variable-geometry rotor, powered by the automatic Calibre RMAL1 with a 55-hour power reserve, 49.9mm x 44.5mm dimensions, and 50m water resistance."
     },
@@ -361,7 +361,7 @@ watches = [
         "year": 2012,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 7500000,
+        "price_php": 18200000,
         "image": "images/bubbawatson.jpg",
         "description": "A manual-wind skeletonized sports watch engineered to withstand extreme accelerations. Powered by the manual-wind Calibre RMUL2 with a 55-hour power reserve, 49.9mm x 42.7mm dimensions, and 30m water resistance."
     },
@@ -382,7 +382,7 @@ watches = [
         "year": 2015,
         "origin": "Switzerland",
         "category": "Dress",
-        "price_php": 2250000,
+        "price_php": 2650000,
         "image": "images/president.jpg",
         "description": "The quintessential prestige watch featuring the iconic President bracelet and champagne dial with fluted bezel. Powered by the automatic Calibre 3255 with a 70-hour power reserve, 40mm case diameter, and 100m water resistance."
     },
@@ -403,7 +403,7 @@ watches = [
         "year": 2016,
         "origin": "Switzerland",
         "category": "Diver",
-        "price_php": 740000,
+        "price_php": 620000,
         "image": "images/planetocean.jpg",
         "description": "A state-of-the-art diving watch combining GMT functionality with extreme depth rating in a solid black ceramic case. Powered by the automatic Co-Axial Master Chronometer Calibre 8906 with a 60-hour power reserve, 45.5mm case diameter, and 600m water resistance."
     },
@@ -424,7 +424,7 @@ watches = [
         "year": 2017,
         "origin": "Switzerland",
         "category": "Chronograph",
-        "price_php": 1800000,
+        "price_php": 2650000,
         "image": "images/rocpanda.jpg",
         "description": "A sporty high-horology chronograph featuring a silver-toned Grande Tapisserie dial and contrasting black sub-dials. Powered by the self-winding Calibre 2385 with a 40-hour power reserve, 41mm case diameter, and 50m water resistance."
     },
@@ -445,7 +445,7 @@ watches = [
         "year": 2021,
         "origin": "Switzerland",
         "category": "Dress",
-        "price_php": 1820000,
+        "price_php": 1950000,
         "image": "images/calatrava.jpg",
         "description": "The benchmark round dress watch featuring a refined guilloche hobnail bezel and silvery grained dial. Powered by the manual-wind Calibre 30-255 PS with a 65-hour power reserve, 39mm case diameter, and 30m water resistance."
     },
@@ -466,7 +466,7 @@ watches = [
         "year": 2017,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 8200000,
+        "price_php": 15800000,
         "image": "images/rm6702.jpg",
         "description": "An ultra-thin, featherweight athletic watch weighing just 32 grams including its seamless comfort strap. Powered by the automatic skeletonized Calibre CRMA7 with a 50-hour power reserve, 38.7mm x 47.5mm dimensions, and 50m water resistance."
     },
@@ -487,7 +487,7 @@ watches = [
         "year": 2020,
         "origin": "Switzerland",
         "category": "Diver",
-        "price_php": 590000,
+        "price_php": 790000,
         "image": "images/subdate.jpg",
         "description": "The quintessential luxury diving instrument featuring a black dial and unidirectional Cerachrom ceramic bezel. Powered by the Calibre 3235 movement with a 70-hour power reserve, 41mm case diameter, and 300m water resistance."
     },
@@ -508,7 +508,7 @@ watches = [
         "year": 2022,
         "origin": "Switzerland",
         "category": "GMT",
-        "price_php": 765000,
+        "price_php": 1100000,
         "image": "images/sprite.jpg",
         "description": "A left-handed dual-time pilot watch with the winding crown and date aperture positioned at 9 o'clock. Features a green and black Cerachrom bezel and automatic Calibre 3285 movement with 100m water resistance."
     },
@@ -529,7 +529,7 @@ watches = [
         "year": 2018,
         "origin": "Switzerland",
         "category": "Diver",
-        "price_php": 340000,
+        "price_php": 320000,
         "image": "images/seamaster_blue.jpg",
         "description": "The modern iteration of the legendary Bond diver with laser-engraved waves on a blue ceramic dial. Driven by the METAS-certified Co-Axial Master Chronometer Calibre 8800 with a 300m water resistance rating."
     },
@@ -550,7 +550,7 @@ watches = [
         "year": 2015,
         "origin": "Switzerland",
         "category": "Dress",
-        "price_php": 440000,
+        "price_php": 410000,
         "image": "images/globemaster.jpg",
         "description": "The world's first Master Chronometer timepiece featuring a classic pie-pan dial and scratch-resistant hard metal fluted bezel. Powered by the twin-barrel Calibre 8900 with a 60-hour power reserve."
     },
@@ -571,7 +571,7 @@ watches = [
         "year": 2021,
         "origin": "Switzerland",
         "category": "Diver",
-        "price_php": 1580000,
+        "price_php": 1750000,
         "image": "images/offshorediver.jpg",
         "description": "A high-performance luxury diving timepiece equipped with an internal rotating dive bezel operated via a ceramic crown at 10 o'clock. Features a khaki green Méga Tapisserie dial, interchangeable rubber strap, and manufacture Calibre 4308 with 300m water resistance."
     },
@@ -592,7 +592,7 @@ watches = [
         "year": 2022,
         "origin": "Switzerland",
         "category": "Chronograph",
-        "price_php": 2200000,
+        "price_php": 3400000,
         "image": "images/roc_blue.jpg",
         "description": "A high-performance luxury sports chronograph featuring a column-wheel flyback mechanism. Powered by manufacture Calibre 4401 with a 70-hour power reserve and signature octagonal bezel geometry."
     },
@@ -613,7 +613,7 @@ watches = [
         "year": 2010,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 2750000,
+        "price_php": 4850000,
         "image": "images/nautilus_moon.jpg",
         "description": "A complicated Nautilus combining an annual calendar, moon phases, and 24-hour indication in a stainless steel casing. Powered by self-winding Calibre 324 with 120m water resistance."
     },
@@ -634,7 +634,7 @@ watches = [
         "year": 2018,
         "origin": "Switzerland",
         "category": "Chronograph",
-        "price_php": 3250000,
+        "price_php": 6500000,
         "image": "images/aquanaut_chrono.jpg",
         "description": "A vibrant flyback chronograph designed for active horology enthusiasts, highlighted by vivid orange accents and composite straps. Powered by self-winding Calibre CH 28-520 C with 120m water resistance."
     },
@@ -655,7 +655,7 @@ watches = [
         "year": 2011,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 6800000,
+        "price_php": 9800000,
         "image": "images/rm029.jpg",
         "description": "An architectural skeletonized automatic timepiece featuring an oversized calendar aperture at 4 o'clock and variable-geometry rotor. Driven by the titanium Calibre RMAS7."
     },
@@ -676,7 +676,7 @@ watches = [
         "year": 2023,
         "origin": "Switzerland",
         "category": "Sports",
-        "price_php": 11500000,
+        "price_php": 16500000,
         "image": "images/rm3001.jpg",
         "description": "An engineering feat showcasing a patented automatic declutching rotor that disengages upon reaching peak power reserve to eliminate mainspring overwinding. Driven by Calibre RMC02."
     }
