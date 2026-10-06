@@ -40,7 +40,7 @@ The gallery curates 30 luxury references across 5 Swiss horology manufactures:
 ---
 
 ## Files in This Project
-
+```text
 watch-gallery/
 ├── images/        # High-resolution watch renders and brand emblems
 ├── index.html     # Semantic structure, navigation bar, hero, and modal markup
