@@ -3,6 +3,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 from typing import Optional, Literal
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from dotenv import load_dotenv
+
+# Database Connection
+load_dotenv()
+
+def get_db_connection():
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise ValueError("DATABASE_URL environment variable is not set.")
+    return psycopg2.connect(database_url, cursor_factory=RealDictCursor)
 
 # Configuration
 VALID_API_KEYS = {
@@ -19,6 +32,7 @@ app = FastAPI(
     version=API_VERSION
 )
 
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,7 +41,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Watch Data Model
+# Watch Data Models
 class Watch(BaseModel):
     id: int
     brand: Literal["Rolex", "Omega", "Audemars Piguet", "Patek Philippe", "Richard Mille"]
@@ -49,642 +63,45 @@ class Watch(BaseModel):
     image: str = Field(min_length=1)
     description: str = Field(min_length=1)
 
-watches = [
-    {
-        "id": 1,
-        "brand": "Rolex",
-        "model": "GMT-Master II",
-        "nickname": "Pepsi",
-        "reference_number": "126710BLRO",
-        "case_material": "Oystersteel",
-        "case_size_mm": 40.0,
-        "dial_color": "Black",
-        "bezel_material": "Bidirectional Red & Blue Cerachrom Ceramic",
-        "movement_type": "Automatic",
-        "movement": "Calibre 3285",
-        "power_reserve_hours": 70,
-        "water_resistance_m": 100,
-        "year": 2018,
-        "origin": "Switzerland",
-        "category": "GMT",
-        "price_php": 1150000,
-        "image": "images/pepsi.jpg",
-        "description": "An iconic dual-time pilot watch featuring a bidirectional red and blue Cerachrom ceramic bezel. Powered by the automatic Calibre 3285 movement with a 70-hour power reserve, 40mm case diameter, and 100m water resistance."
-    },
-    {
-        "id": 2,
-        "brand": "Omega",
-        "model": "Speedmaster Professional",
-        "nickname": "Moonwatch",
-        "reference_number": "310.30.42.50.01.001",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 42.0,
-        "dial_color": "Black Step Dial",
-        "bezel_material": "Anodized Aluminum with Tachymeter Scale",
-        "movement_type": "Manual-Wind",
-        "movement": "Co-Axial Master Chronometer Calibre 3861",
-        "power_reserve_hours": 50,
-        "water_resistance_m": 50,
-        "year": 2021,
-        "origin": "Switzerland",
-        "category": "Chronograph",
-        "price_php": 480000,
-        "image": "images/moonwatch.jpg",
-        "description": "The legendary chronograph flight-qualified by NASA for all manned space missions. Powered by the manual-wind Co-Axial Master Chronometer Calibre 3861 with a 50-hour power reserve, 42mm case diameter, and 50m water resistance."
-    },
-    {
-        "id": 3,
-        "brand": "Audemars Piguet",
-        "model": "Royal Oak Jumbo Extra-Thin",
-        "nickname": "Jumbo",
-        "reference_number": "16202ST.OO.1240ST.01",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 39.0,
-        "dial_color": "Bleu Nuit Nuage 50 Petite Tapisserie",
-        "bezel_material": "Stainless Steel with 8 Hexagonal Screws",
-        "movement_type": "Automatic",
-        "movement": "Calibre 7121",
-        "power_reserve_hours": 55,
-        "water_resistance_m": 50,
-        "year": 2022,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 4600000,
-        "image": "images/jumbo.jpg",
-        "description": "An iconic luxury sports watch featuring an integrated bracelet and signature Petite Tapisserie blue dial. Powered by the self-winding Calibre 7121 with a 55-hour power reserve, 39mm case diameter, 8.1mm thickness, and 50m water resistance."
-    },
-    {
-        "id": 4,
-        "brand": "Patek Philippe",
-        "model": "Nautilus",
-        "nickname": "Nautilus Blue",
-        "reference_number": "5711/1A-010",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 40.0,
-        "dial_color": "Horizontally Embossed Blue Sunburst",
-        "bezel_material": "Stainless Steel Rounded Octagonal",
-        "movement_type": "Automatic",
-        "movement": "Calibre 26-330 S C",
-        "power_reserve_hours": 45,
-        "water_resistance_m": 120,
-        "year": 2006,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 6200000,
-        "image": "images/nautilus.jpg",
-        "description": "A prestigious luxury sports watch defined by its rounded octagonal bezel and horizontally embossed blue dial. Powered by the self-winding Calibre 26-330 S C with a 45-hour power reserve, 40mm case diameter, and 120m water resistance."
-    },
-    {
-        "id": 5,
-        "brand": "Richard Mille",
-        "model": "RM 011",
-        "nickname": "Felipe Massa",
-        "reference_number": "RM 011 FM",
-        "case_material": "Grade 5 Titanium",
-        "case_size_mm": 50.0,
-        "dial_color": "Skeletonized Transparent",
-        "bezel_material": "Grade 5 Titanium",
-        "movement_type": "Automatic",
-        "movement": "Flyback Chronograph Calibre RMAC1",
-        "power_reserve_hours": 50,
-        "water_resistance_m": 50,
-        "year": 2007,
-        "origin": "Switzerland",
-        "category": "Chronograph",
-        "price_php": 13800000,
-        "image": "images/rm011.jpg",
-        "description": "An avant-garde motorsport timepiece featuring a flyback chronograph and annual calendar in a signature tonneau case. Powered by the automatic skeletonized Calibre RMAC1 with a 50-hour power reserve, 50mm x 40mm dimensions, and 50m water resistance."
-    },
-    {
-        "id": 6,
-        "brand": "Rolex",
-        "model": "Submariner Date",
-        "nickname": "Kermit",
-        "reference_number": "126610LV",
-        "case_material": "Oystersteel",
-        "case_size_mm": 41.0,
-        "dial_color": "Black",
-        "bezel_material": "Unidirectional Green Cerachrom Ceramic",
-        "movement_type": "Automatic",
-        "movement": "Calibre 3235",
-        "power_reserve_hours": 70,
-        "water_resistance_m": 300,
-        "year": 2020,
-        "origin": "Switzerland",
-        "category": "Diver",
-        "price_php": 880000,
-        "image": "images/kermit.jpg",
-        "description": "A benchmark divers watch featuring a green unidirectional Cerachrom bezel and black dial. Powered by the automatic Calibre 3235 movement with a 70-hour power reserve, 41mm case diameter, and 300m water resistance."
-    },
-    {
-        "id": 7,
-        "brand": "Rolex",
-        "model": "Cosmograph Daytona",
-        "nickname": "Panda",
-        "reference_number": "126500LN",
-        "case_material": "Oystersteel",
-        "case_size_mm": 40.0,
-        "dial_color": "White Lacquer with Black Sub-Dials",
-        "bezel_material": "Black Cerachrom Ceramic with Tachymetric Scale",
-        "movement_type": "Automatic",
-        "movement": "Chronograph Calibre 4131",
-        "power_reserve_hours": 72,
-        "water_resistance_m": 100,
-        "year": 2023,
-        "origin": "Switzerland",
-        "category": "Chronograph",
-        "price_php": 1850000,
-        "image": "images/panda.jpg",
-        "description": "A celebrated racing chronograph with a white lacquer dial and black Cerachrom tachymetric bezel. Powered by the automatic Calibre 4131 movement with a 72-hour power reserve, 40mm case diameter, and 100m water resistance."
-    },
-    {
-        "id": 8,
-        "brand": "Omega",
-        "model": "Seamaster Diver 300M",
-        "nickname": "No Time to Die",
-        "reference_number": "210.90.42.20.01.001",
-        "case_material": "Grade 2 Titanium",
-        "case_size_mm": 42.0,
-        "dial_color": "Tropical Matte Brown Aluminum",
-        "bezel_material": "Tropical Brown Aluminum with Vintage Super-LumiNova",
-        "movement_type": "Automatic",
-        "movement": "Co-Axial Master Chronometer Calibre 8806",
-        "power_reserve_hours": 55,
-        "water_resistance_m": 300,
-        "year": 2020,
-        "origin": "Switzerland",
-        "category": "Diver",
-        "price_php": 580000,
-        "image": "images/nttd.jpg",
-        "description": "The military-inspired 007 edition timepiece featuring a tropical brown aluminum dial and titanium mesh bracelet. Powered by the automatic Co-Axial Master Chronometer Calibre 8806 with a 55-hour power reserve, 42mm case diameter, and 300m water resistance."
-    },
-    {
-        "id": 9,
-        "brand": "Omega",
-        "model": "Seamaster Aqua Terra 150M",
-        "nickname": "Terracotta",
-        "reference_number": "220.10.38.20.13.003",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 38.0,
-        "dial_color": "Sun-Brushed Terracotta Brass",
-        "bezel_material": "Smooth Stainless Steel",
-        "movement_type": "Automatic",
-        "movement": "Co-Axial Master Chronometer Calibre 8800",
-        "power_reserve_hours": 55,
-        "water_resistance_m": 150,
-        "year": 2022,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 395000,
-        "image": "images/terracotta.jpg",
-        "description": "A versatile luxury sports watch featuring a sun-brushed terracotta-colored brass dial. Powered by the automatic Co-Axial Master Chronometer Calibre 8800 with a 55-hour power reserve, 38mm case diameter, and 150m water resistance."
-    },
-    {
-        "id": 10,
-        "brand": "Audemars Piguet",
-        "model": "Royal Oak Offshore Chronograph",
-        "nickname": "Offshore Ghost",
-        "reference_number": "26470IO.OO.A006CA.01",
-        "case_material": "Titanium",
-        "case_size_mm": 42.0,
-        "dial_color": "Slate Grey Méga Tapisserie",
-        "bezel_material": "Grey Ceramic",
-        "movement_type": "Automatic",
-        "movement": "Chronograph Calibre 3126 / 3840",
-        "power_reserve_hours": 50,
-        "water_resistance_m": 100,
-        "year": 2018,
-        "origin": "Switzerland",
-        "category": "Chronograph",
-        "price_php": 2100000,
-        "image": "images/ghost.jpg",
-        "description": "A robust, sporty chronograph featuring a ceramic bezel and slate grey Méga Tapisserie dial. Powered by the automatic Calibre 3126 / 3840 with a 50-hour power reserve, 42mm case diameter, and 100m water resistance."
-    },
-    {
-        "id": 11,
-        "brand": "Audemars Piguet",
-        "model": "Royal Oak Double Balance Wheel",
-        "nickname": "Skeleton Royal Oak",
-        "reference_number": "15407ST.OO.1220ST.01",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 41.0,
-        "dial_color": "Slate Grey Openworked Skeleton",
-        "bezel_material": "Stainless Steel with 8 Hexagonal Screws",
-        "movement_type": "Automatic",
-        "movement": "Calibre 3132",
-        "power_reserve_hours": 45,
-        "water_resistance_m": 50,
-        "year": 2016,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 6800000,
-        "image": "images/skeletonro.jpg",
-        "description": "A high-complication horological piece featuring a patented dual balance wheel assembly visible through a skeletonized dial. Powered by the self-winding Calibre 3132 with a 45-hour power reserve, 41mm case diameter, and 50m water resistance."
-    },
-    {
-        "id": 12,
-        "brand": "Patek Philippe",
-        "model": "Aquanaut",
-        "nickname": "Jumbo Aquanaut",
-        "reference_number": "5167A-001",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 40.8,
-        "dial_color": "Black Embossed",
-        "bezel_material": "Satin-Brushed Stainless Steel",
-        "movement_type": "Automatic",
-        "movement": "Calibre 26-330 S C",
-        "power_reserve_hours": 45,
-        "water_resistance_m": 120,
-        "year": 2007,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 3100000,
-        "image": "images/aquanaut.jpg",
-        "description": "A contemporary, dynamic sports timepiece featuring a black embossed dial and composite Tropical strap. Powered by the self-winding Calibre 26-330 S C with a 45-hour power reserve, 40.8mm case diameter, and 120m water resistance."
-    },
-    {
-        "id": 13,
-        "brand": "Patek Philippe",
-        "model": "Grand Complications",
-        "nickname": "Perpetual Calendar Chronograph",
-        "reference_number": "5270P-001",
-        "case_material": "Platinum",
-        "case_size_mm": 41.0,
-        "dial_color": "Golden Opaline Salmon",
-        "bezel_material": "Polished Platinum",
-        "movement_type": "Manual-Wind",
-        "movement": "Calibre CH 29-535 PS Q",
-        "power_reserve_hours": 65,
-        "water_resistance_m": 30,
-        "year": 2018,
-        "origin": "Switzerland",
-        "category": "Dress",
-        "price_php": 11500000,
-        "image": "images/perpetual.jpg",
-        "description": "An exquisite haute horlogerie grand complication featuring a perpetual calendar, moon phase, and salmon dial. Powered by the manual-wind Calibre CH 29-535 PS Q with a 65-hour power reserve, 41mm case diameter, and 30m water resistance."
-    },
-    {
-        "id": 14,
-        "brand": "Richard Mille",
-        "model": "RM 035",
-        "nickname": "Baby Nadal",
-        "reference_number": "RM 035-02",
-        "case_material": "Carbon TPT",
-        "case_size_mm": 49.9,
-        "dial_color": "Skeletonized Transparent",
-        "bezel_material": "Carbon TPT",
-        "movement_type": "Automatic",
-        "movement": "Calibre RMAL1",
-        "power_reserve_hours": 55,
-        "water_resistance_m": 50,
-        "year": 2016,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 17500000,
-        "image": "images/babynadal.jpg",
-        "description": "An ultralight, high-shock sports watch developed alongside Rafael Nadal. Features a skeletonized movement and variable-geometry rotor, powered by the automatic Calibre RMAL1 with a 55-hour power reserve, 49.9mm x 44.5mm dimensions, and 50m water resistance."
-    },
-    {
-        "id": 15,
-        "brand": "Richard Mille",
-        "model": "RM 055",
-        "nickname": "Bubba Watson",
-        "reference_number": "RM 055",
-        "case_material": "Grade 5 Titanium",
-        "case_size_mm": 49.9,
-        "dial_color": "Skeletonized Transparent",
-        "bezel_material": "ATZ White Ceramic",
-        "movement_type": "Manual-Wind",
-        "movement": "Calibre RMUL2",
-        "power_reserve_hours": 55,
-        "water_resistance_m": 30,
-        "year": 2012,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 18200000,
-        "image": "images/bubbawatson.jpg",
-        "description": "A manual-wind skeletonized sports watch engineered to withstand extreme accelerations. Powered by the manual-wind Calibre RMUL2 with a 55-hour power reserve, 49.9mm x 42.7mm dimensions, and 30m water resistance."
-    },
-    {
-        "id": 16,
-        "brand": "Rolex",
-        "model": "Day-Date 40",
-        "nickname": "President",
-        "reference_number": "228238",
-        "case_material": "18k Yellow Gold",
-        "case_size_mm": 40.0,
-        "dial_color": "Champagne",
-        "bezel_material": "Fluted 18k Yellow Gold",
-        "movement_type": "Automatic",
-        "movement": "Calibre 3255",
-        "power_reserve_hours": 70,
-        "water_resistance_m": 100,
-        "year": 2015,
-        "origin": "Switzerland",
-        "category": "Dress",
-        "price_php": 2650000,
-        "image": "images/president.jpg",
-        "description": "The quintessential prestige watch featuring the iconic President bracelet and champagne dial with fluted bezel. Powered by the automatic Calibre 3255 with a 70-hour power reserve, 40mm case diameter, and 100m water resistance."
-    },
-    {
-        "id": 17,
-        "brand": "Omega",
-        "model": "Planet Ocean 600M",
-        "nickname": "Deep Black",
-        "reference_number": "215.92.46.22.01.001",
-        "case_material": "Black Ceramic",
-        "case_size_mm": 45.5,
-        "dial_color": "Black Zirconium Dioxide Ceramic",
-        "bezel_material": "Unidirectional Black Ceramic with Liquidmetal Scale",
-        "movement_type": "Automatic",
-        "movement": "Co-Axial Master Chronometer Calibre 8906",
-        "power_reserve_hours": 60,
-        "water_resistance_m": 600,
-        "year": 2016,
-        "origin": "Switzerland",
-        "category": "Diver",
-        "price_php": 620000,
-        "image": "images/planetocean.jpg",
-        "description": "A state-of-the-art diving watch combining GMT functionality with extreme depth rating in a solid black ceramic case. Powered by the automatic Co-Axial Master Chronometer Calibre 8906 with a 60-hour power reserve, 45.5mm case diameter, and 600m water resistance."
-    },
-    {
-        "id": 18,
-        "brand": "Audemars Piguet",
-        "model": "Royal Oak Chronograph",
-        "nickname": "ROC Panda",
-        "reference_number": "26331ST.OO.1220ST.03",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 41.0,
-        "dial_color": "Silver-Toned Grande Tapisserie with Black Counters",
-        "bezel_material": "Stainless Steel with 8 Hexagonal Screws",
-        "movement_type": "Automatic",
-        "movement": "Chronograph Calibre 2385",
-        "power_reserve_hours": 40,
-        "water_resistance_m": 50,
-        "year": 2017,
-        "origin": "Switzerland",
-        "category": "Chronograph",
-        "price_php": 2650000,
-        "image": "images/rocpanda.jpg",
-        "description": "A sporty high-horology chronograph featuring a silver-toned Grande Tapisserie dial and contrasting black sub-dials. Powered by the self-winding Calibre 2385 with a 40-hour power reserve, 41mm case diameter, and 50m water resistance."
-    },
-    {
-        "id": 19,
-        "brand": "Patek Philippe",
-        "model": "Calatrava",
-        "nickname": "Clous de Paris",
-        "reference_number": "6119R-001",
-        "case_material": "18k Rose Gold",
-        "case_size_mm": 39.0,
-        "dial_color": "Silvery Grained",
-        "bezel_material": "Guilloched Clous de Paris 18k Rose Gold",
-        "movement_type": "Manual-Wind",
-        "movement": "Calibre 30-255 PS",
-        "power_reserve_hours": 65,
-        "water_resistance_m": 30,
-        "year": 2021,
-        "origin": "Switzerland",
-        "category": "Dress",
-        "price_php": 1950000,
-        "image": "images/calatrava.jpg",
-        "description": "The benchmark round dress watch featuring a refined guilloche hobnail bezel and silvery grained dial. Powered by the manual-wind Calibre 30-255 PS with a 65-hour power reserve, 39mm case diameter, and 30m water resistance."
-    },
-    {
-        "id": 20,
-        "brand": "Richard Mille",
-        "model": "RM 67-02",
-        "nickname": "Sprint",
-        "reference_number": "RM 67-02",
-        "case_material": "Carbon TPT and Quartz TPT",
-        "case_size_mm": 38.7,
-        "dial_color": "Skeletonized Transparent",
-        "bezel_material": "Quartz TPT",
-        "movement_type": "Automatic",
-        "movement": "Calibre CRMA7",
-        "power_reserve_hours": 50,
-        "water_resistance_m": 30,
-        "year": 2017,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 15800000,
-        "image": "images/rm6702.jpg",
-        "description": "An ultra-thin, featherweight athletic watch weighing just 32 grams including its seamless comfort strap. Powered by the automatic skeletonized Calibre CRMA7 with a 50-hour power reserve, 38.7mm x 47.5mm dimensions, and 50m water resistance."
-    },
-    {
-        "id": 21,
-        "brand": "Rolex",
-        "model": "Submariner Date",
-        "nickname": "Submariner Date Black",
-        "reference_number": "126610LN",
-        "case_material": "Oystersteel",
-        "case_size_mm": 41.0,
-        "dial_color": "Black",
-        "bezel_material": "Unidirectional Black Cerachrom Ceramic",
-        "movement_type": "Automatic",
-        "movement": "Calibre 3235",
-        "power_reserve_hours": 70,
-        "water_resistance_m": 300,
-        "year": 2020,
-        "origin": "Switzerland",
-        "category": "Diver",
-        "price_php": 790000,
-        "image": "images/subdate.jpg",
-        "description": "The quintessential luxury diving instrument featuring a black dial and unidirectional Cerachrom ceramic bezel. Powered by the Calibre 3235 movement with a 70-hour power reserve, 41mm case diameter, and 300m water resistance."
-    },
-    {
-        "id": 22,
-        "brand": "Rolex",
-        "model": "GMT-Master II",
-        "nickname": "Sprite",
-        "reference_number": "126720VTNR",
-        "case_material": "Oystersteel",
-        "case_size_mm": 40.0,
-        "dial_color": "Black",
-        "bezel_material": "Bidirectional Green & Black Cerachrom Ceramic",
-        "movement_type": "Automatic",
-        "movement": "Calibre 3285",
-        "power_reserve_hours": 70,
-        "water_resistance_m": 100,
-        "year": 2022,
-        "origin": "Switzerland",
-        "category": "GMT",
-        "price_php": 1100000,
-        "image": "images/sprite.jpg",
-        "description": "A left-handed dual-time pilot watch with the winding crown and date aperture positioned at 9 o'clock. Features a green and black Cerachrom bezel and automatic Calibre 3285 movement with 100m water resistance."
-    },
-    {
-        "id": 23,
-        "brand": "Omega",
-        "model": "Seamaster Diver 300M",
-        "nickname": "Seamaster Blue Wave",
-        "reference_number": "210.30.42.20.03.001",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 42.0,
-        "dial_color": "Blue Ceramic Wave",
-        "bezel_material": "Blue Ceramic with White Enamel Scale",
-        "movement_type": "Automatic",
-        "movement": "Co-Axial Master Chronometer Calibre 8800",
-        "power_reserve_hours": 55,
-        "water_resistance_m": 300,
-        "year": 2018,
-        "origin": "Switzerland",
-        "category": "Diver",
-        "price_php": 320000,
-        "image": "images/seamaster_blue.jpg",
-        "description": "The modern iteration of the legendary Bond diver with laser-engraved waves on a blue ceramic dial. Driven by the METAS-certified Co-Axial Master Chronometer Calibre 8800 with a 300m water resistance rating."
-    },
-    {
-        "id": 24,
-        "brand": "Omega",
-        "model": "Constellation Globemaster",
-        "nickname": "Globemaster",
-        "reference_number": "130.30.39.21.03.001",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 39.0,
-        "dial_color": "Sun-Brushed Blue Pie-Pan",
-        "bezel_material": "Hard Metal Fluted",
-        "movement_type": "Automatic",
-        "movement": "Co-Axial Master Chronometer Calibre 8900",
-        "power_reserve_hours": 60,
-        "water_resistance_m": 100,
-        "year": 2015,
-        "origin": "Switzerland",
-        "category": "Dress",
-        "price_php": 410000,
-        "image": "images/globemaster.jpg",
-        "description": "The world's first Master Chronometer timepiece featuring a classic pie-pan dial and scratch-resistant hard metal fluted bezel. Powered by the twin-barrel Calibre 8900 with a 60-hour power reserve."
-    },
-    {
-        "id": 25,
-        "brand": "Audemars Piguet",
-        "model": "Royal Oak Offshore Diver",
-        "nickname": "Offshore Diver Khaki",
-        "reference_number": "15720ST.OO.A052CA.01",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 42.0,
-        "dial_color": "Khaki Green Méga Tapisserie",
-        "bezel_material": "Stainless Steel with Inner Rotating Diving Bezel",
-        "movement_type": "Automatic",
-        "movement": "Calibre 4308",
-        "power_reserve_hours": 60,
-        "water_resistance_m": 300,
-        "year": 2021,
-        "origin": "Switzerland",
-        "category": "Diver",
-        "price_php": 1750000,
-        "image": "images/offshorediver.jpg",
-        "description": "A high-performance luxury diving timepiece equipped with an internal rotating dive bezel operated via a ceramic crown at 10 o'clock. Features a khaki green Méga Tapisserie dial, interchangeable rubber strap, and manufacture Calibre 4308 with 300m water resistance."
-    },
-    {
-        "id": 26,
-        "brand": "Audemars Piguet",
-        "model": "Royal Oak Chronograph",
-        "nickname": "ROC Blue Dial",
-        "reference_number": "26240ST.OO.1320ST.05",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 41.0,
-        "dial_color": "Bleu Nuit Grande Tapisserie",
-        "bezel_material": "Stainless Steel with 8 Hexagonal Screws",
-        "movement_type": "Automatic",
-        "movement": "Flyback Chronograph Calibre 4401",
-        "power_reserve_hours": 70,
-        "water_resistance_m": 50,
-        "year": 2022,
-        "origin": "Switzerland",
-        "category": "Chronograph",
-        "price_php": 3400000,
-        "image": "images/roc_blue.jpg",
-        "description": "A high-performance luxury sports chronograph featuring a column-wheel flyback mechanism. Powered by manufacture Calibre 4401 with a 70-hour power reserve and signature octagonal bezel geometry."
-    },
-    {
-        "id": 27,
-        "brand": "Patek Philippe",
-        "model": "Nautilus Annual Calendar",
-        "nickname": "Nautilus Moonphase",
-        "reference_number": "5726A-001",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 40.5,
-        "dial_color": "Black Gradated",
-        "bezel_material": "Stainless Steel Rounded Octagonal",
-        "movement_type": "Automatic",
-        "movement": "Calibre 324 S QA LU 24H/303",
-        "power_reserve_hours": 45,
-        "water_resistance_m": 120,
-        "year": 2010,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 4850000,
-        "image": "images/nautilus_moon.jpg",
-        "description": "A complicated Nautilus combining an annual calendar, moon phases, and 24-hour indication in a stainless steel casing. Powered by self-winding Calibre 324 with 120m water resistance."
-    },
-    {
-        "id": 28,
-        "brand": "Patek Philippe",
-        "model": "Aquanaut Chronograph",
-        "nickname": "Aquanaut Orange",
-        "reference_number": "5968A-001",
-        "case_material": "Stainless Steel",
-        "case_size_mm": 42.2,
-        "dial_color": "Black Embossed with Orange Accents",
-        "bezel_material": "Satin-Brushed Stainless Steel",
-        "movement_type": "Automatic",
-        "movement": "Flyback Chronograph Calibre CH 28-520 C",
-        "power_reserve_hours": 55,
-        "water_resistance_m": 120,
-        "year": 2018,
-        "origin": "Switzerland",
-        "category": "Chronograph",
-        "price_php": 6500000,
-        "image": "images/aquanaut_chrono.jpg",
-        "description": "A vibrant flyback chronograph designed for active horology enthusiasts, highlighted by vivid orange accents and composite straps. Powered by self-winding Calibre CH 28-520 C with 120m water resistance."
-    },
-    {
-        "id": 29,
-        "brand": "Richard Mille",
-        "model": "RM 029",
-        "nickname": "Big Date",
-        "reference_number": "RM 029",
-        "case_material": "Grade 5 Titanium",
-        "case_size_mm": 48.0,
-        "dial_color": "Skeletonized Transparent",
-        "bezel_material": "Grade 5 Titanium",
-        "movement_type": "Automatic",
-        "movement": "Calibre RMAS7",
-        "power_reserve_hours": 55,
-        "water_resistance_m": 50,
-        "year": 2011,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 9800000,
-        "image": "images/rm029.jpg",
-        "description": "An architectural skeletonized automatic timepiece featuring an oversized calendar aperture at 4 o'clock and variable-geometry rotor. Driven by the titanium Calibre RMAS7."
-    },
-    {
-        "id": 30,
-        "brand": "Richard Mille",
-        "model": "RM 30-01",
-        "nickname": "Decoupleable Rotor",
-        "reference_number": "RM 30-01",
-        "case_material": "Grade 5 Titanium",
-        "case_size_mm": 49.9,
-        "dial_color": "Skeletonized Transparent",
-        "bezel_material": "Grade 5 Titanium",
-        "movement_type": "Automatic",
-        "movement": "Calibre RMC02",
-        "power_reserve_hours": 55,
-        "water_resistance_m": 50,
-        "year": 2023,
-        "origin": "Switzerland",
-        "category": "Sports",
-        "price_php": 16500000,
-        "image": "images/rm3001.jpg",
-        "description": "An engineering feat showcasing a patented automatic declutching rotor that disengages upon reaching peak power reserve to eliminate mainspring overwinding. Driven by Calibre RMC02."
-    }
-]
+class WatchCreate(BaseModel):
+    brand: Literal["Rolex", "Omega", "Audemars Piguet", "Patek Philippe", "Richard Mille"]
+    model: str = Field(min_length=1)
+    nickname: str = Field(min_length=1)
+    reference_number: str = Field(min_length=1)
+    case_material: str = Field(min_length=1)
+    case_size_mm: float = Field(gt=0)
+    dial_color: str = Field(min_length=1)
+    bezel_material: str = Field(min_length=1)
+    movement_type: Literal["Automatic", "Manual-Wind"]
+    movement: str = Field(min_length=1)
+    power_reserve_hours: int = Field(gt=0)
+    water_resistance_m: int = Field(gt=0)
+    year: int = Field(ge=1900, le=2026)
+    origin: Literal["Switzerland"]
+    category: Literal["Diver", "Chronograph", "Sports", "Dress", "Pilot", "Field", "GMT"]
+    price_php: int = Field(gt=0)
+    image: str = Field(min_length=1)
+    description: str = Field(min_length=1)
 
-# Startup dataset validation
-validated_watches = [Watch(**watch).model_dump() for watch in watches]
-watches = validated_watches
+class WatchUpdate(BaseModel):
+    brand: Optional[Literal["Rolex", "Omega", "Audemars Piguet", "Patek Philippe", "Richard Mille"]] = None
+    model: Optional[str] = Field(default=None, min_length=1)
+    nickname: Optional[str] = Field(default=None, min_length=1)
+    reference_number: Optional[str] = Field(default=None, min_length=1)
+    case_material: Optional[str] = Field(default=None, min_length=1)
+    case_size_mm: Optional[float] = Field(default=None, gt=0)
+    dial_color: Optional[str] = Field(default=None, min_length=1)
+    bezel_material: Optional[str] = Field(default=None, min_length=1)
+    movement_type: Optional[Literal["Automatic", "Manual-Wind"]] = None
+    movement: Optional[str] = Field(default=None, min_length=1)
+    power_reserve_hours: Optional[int] = Field(default=None, gt=0)
+    water_resistance_m: Optional[int] = Field(default=None, gt=0)
+    year: Optional[int] = Field(default=None, ge=1900, le=2026)
+    origin: Optional[Literal["Switzerland"]] = None
+    category: Optional[Literal["Diver", "Chronograph", "Sports", "Dress", "Pilot", "Field", "GMT"]] = None
+    price_php: Optional[int] = Field(default=None, gt=0)
+    image: Optional[str] = Field(default=None, min_length=1)
+    description: Optional[str] = Field(default=None, min_length=1)
 
 # Authentication
 def verify_api_key(x_api_key: Optional[str] = Header(default=None)):
@@ -695,6 +112,7 @@ def verify_api_key(x_api_key: Optional[str] = Header(default=None)):
         )
     return True
 
+# Public Routes
 @app.get("/")
 def home():
     return {
@@ -708,7 +126,6 @@ def home():
         ]
     }
 
-# Public Health Check
 @app.get("/health")
 def health_check():
     return {
@@ -718,48 +135,128 @@ def health_check():
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     }
 
-# Protected Routes
+# Protected Routes - Read and Search
 @app.get("/api/v1/watches", dependencies=[Depends(verify_api_key)])
 def get_watches():
-    return {
-        "count": len(watches),
-        "watches": watches
-    }
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM watches ORDER BY id ASC;")
+            rows = cur.fetchall()
+        return {"count": len(rows), "watches": rows}
+    finally:
+        conn.close()
 
 @app.get("/api/v1/watches/search", dependencies=[Depends(verify_api_key)])
 def search_watches(q: str = Query(..., min_length=1)):
-    query = q.lower().strip()
-    results = []
-
-    for watch in watches:
-        searchable_text = (
-            f"{watch['id']} "
-            f"{watch['brand']} "
-            f"{watch['model']} "
-            f"{watch['nickname']} "
-            f"{watch['reference_number']} "
-            f"{watch['case_material']} "
-            f"{watch['dial_color']} "
-            f"{watch['category']} "
-            f"{watch['origin']}"
-        ).lower()
-
-        if query in searchable_text:
-            results.append(watch)
-
-    return {
-        "query": q,
-        "count": len(results),
-        "results": results
-    }
+    pattern = f"%{q.strip()}%"
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT * FROM watches
+                WHERE CAST(id AS TEXT) ILIKE %s
+                   OR brand ILIKE %s
+                   OR model ILIKE %s
+                   OR nickname ILIKE %s
+                   OR reference_number ILIKE %s
+                   OR case_material ILIKE %s
+                   OR dial_color ILIKE %s
+                   OR category ILIKE %s
+                   OR origin ILIKE %s
+                ORDER BY id ASC;
+                """,
+                (pattern,) * 9
+            )
+            results = cur.fetchall()
+        return {"query": q, "count": len(results), "results": results}
+    finally:
+        conn.close()
 
 @app.get("/api/v1/watches/{watch_id}", response_model=Watch, dependencies=[Depends(verify_api_key)])
 def get_watch(watch_id: int):
-    for watch in watches:
-        if watch["id"] == watch_id:
-            return watch
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM watches WHERE id = %s;", (watch_id,))
+            watch = cur.fetchone()
+        if not watch:
+            raise HTTPException(status_code=404, detail="Watch not found.")
+        return watch
+    finally:
+        conn.close()
 
-    raise HTTPException(
-        status_code=404,
-        detail="Watch not found."
-    )
+# Protected Routes - Create
+@app.post("/api/v1/watches", response_model=Watch, status_code=201, dependencies=[Depends(verify_api_key)])
+def create_watch(watch: WatchCreate):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO watches (
+                    brand, model, nickname, reference_number, case_material,
+                    case_size_mm, dial_color, bezel_material, movement_type,
+                    movement, power_reserve_hours, water_resistance_m, year,
+                    origin, category, price_php, image, description
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                RETURNING *;
+                """,
+                (
+                    watch.brand, watch.model, watch.nickname, watch.reference_number,
+                    watch.case_material, watch.case_size_mm, watch.dial_color,
+                    watch.bezel_material, watch.movement_type, watch.movement,
+                    watch.power_reserve_hours, watch.water_resistance_m, watch.year,
+                    watch.origin, watch.category, watch.price_php, watch.image,
+                    watch.description
+                )
+            )
+            new_watch = cur.fetchone()
+        conn.commit()
+        return new_watch
+    finally:
+        conn.close()
+
+# Protected Routes - Update
+@app.patch("/api/v1/watches/{watch_id}", response_model=Watch, dependencies=[Depends(verify_api_key)])
+def update_watch(watch_id: int, watch: WatchUpdate):
+    updates = watch.model_dump(exclude_unset=True)
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields provided to update.")
+
+    set_clause = ", ".join(f"{col} = %s" for col in updates.keys())
+    values = list(updates.values()) + [watch_id]
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"UPDATE watches SET {set_clause} WHERE id = %s RETURNING *;",
+                values
+            )
+            updated_watch = cur.fetchone()
+        if not updated_watch:
+            raise HTTPException(status_code=404, detail="Watch not found.")
+        conn.commit()
+        return updated_watch
+    finally:
+        conn.close()
+
+# Protected Routes - Delete
+@app.delete("/api/v1/watches/{watch_id}", dependencies=[Depends(verify_api_key)])
+def delete_watch(watch_id: int):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM watches WHERE id = %s RETURNING id;", (watch_id,))
+            deleted = cur.fetchone()
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Watch not found.")
+        conn.commit()
+        return {"message": f"Watch {watch_id} deleted successfully."}
+    finally:
+        conn.close()
