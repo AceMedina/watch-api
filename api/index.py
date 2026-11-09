@@ -14,8 +14,11 @@ load_dotenv()
 def get_db_connection():
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
-        raise ValueError("DATABASE_URL environment variable is not set.")
-    return psycopg2.connect(database_url, cursor_factory=RealDictCursor)
+        raise HTTPException(status_code=503, detail="Database configuration missing.")
+    try:
+        return psycopg2.connect(database_url, cursor_factory=RealDictCursor)
+    except psycopg2.OperationalError:
+        raise HTTPException(status_code=503, detail="Database connection failed.")
 
 # Configuration
 VALID_API_KEYS = {
@@ -144,6 +147,8 @@ def get_watches():
             cur.execute("SELECT * FROM watches ORDER BY id ASC;")
             rows = cur.fetchall()
         return {"count": len(rows), "watches": rows}
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
         conn.close()
 
@@ -171,6 +176,8 @@ def search_watches(q: str = Query(..., min_length=1)):
             )
             results = cur.fetchall()
         return {"query": q, "count": len(results), "results": results}
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
         conn.close()
 
@@ -184,6 +191,8 @@ def get_watch(watch_id: int):
         if not watch:
             raise HTTPException(status_code=404, detail="Watch not found.")
         return watch
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
         conn.close()
 
@@ -218,6 +227,12 @@ def create_watch(watch: WatchCreate):
             new_watch = cur.fetchone()
         conn.commit()
         return new_watch
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        raise HTTPException(status_code=409, detail="Duplicate or invalid record.")
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
         conn.close()
 
@@ -243,6 +258,12 @@ def update_watch(watch_id: int, watch: WatchUpdate):
             raise HTTPException(status_code=404, detail="Watch not found.")
         conn.commit()
         return updated_watch
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        raise HTTPException(status_code=409, detail="Duplicate or invalid record.")
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
         conn.close()
 
@@ -258,5 +279,8 @@ def delete_watch(watch_id: int):
             raise HTTPException(status_code=404, detail="Watch not found.")
         conn.commit()
         return {"message": f"Watch {watch_id} deleted successfully."}
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
         conn.close()
