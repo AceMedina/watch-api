@@ -1,3 +1,14 @@
+// Route Guard & Logout
+const currentUser = localStorage.getItem("watch_user");
+if (!currentUser) {
+    window.location.href = "login.html";
+}
+
+function logoutUser() {
+    localStorage.removeItem("watch_user");
+    window.location.href = "login.html";
+}
+
 const API_URL = "https://watch-api-eight.vercel.app";
 
 // Include API Key header if using the protected /api/v1/ routes
