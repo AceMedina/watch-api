@@ -21,11 +21,8 @@ def get_db_connection():
         raise HTTPException(status_code=503, detail="Database connection failed.")
 
 # Configuration
-VALID_API_KEYS = {
-    "watch-api-001": "Watch Gallery",
-    "chronicle-api-002": "Chronicle Game",
-    "broke-oclock-003": "Broke O'Clock"
-}
+raw_keys = os.getenv("VALID_API_KEYS", "")
+VALID_API_KEYS = {key.strip() for key in raw_keys.split(",") if key.strip()}
 
 API_VERSION = "1.0"
 
