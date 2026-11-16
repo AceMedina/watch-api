@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pydantic import BaseModel, Field
 from typing import Optional, Literal
 import os
+import bcrypt
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
@@ -103,6 +104,11 @@ class WatchUpdate(BaseModel):
     image: Optional[str] = Field(default=None, min_length=1)
     description: Optional[str] = Field(default=None, min_length=1)
 
+# User Data Model
+class UserAuth(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    password: str = Field(min_length=4, max_length=72)
+
 # Authentication
 def verify_api_key(x_api_key: Optional[str] = Header(default=None)):
     if not x_api_key or x_api_key not in VALID_API_KEYS:
@@ -122,7 +128,9 @@ def home():
             "/health",
             "/api/v1/watches",
             "/api/v1/watches/{id}",
-            "/api/v1/watches/search"
+            "/api/v1/watches/search",
+            "/api/v1/auth/register",
+            "/api/v1/auth/login"
         ]
     }
 
@@ -281,3 +289,60 @@ def delete_watch(watch_id: int):
         raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
         conn.close()
+
+# Protected Routes - User Authentication
+@app.post("/api/v1/auth/register", status_code=201, dependencies=[Depends(verify_api_key)])
+def register_user(user: UserAuth):
+    clean_username = user.username.strip()
+    hashed_pw = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO users (username, password_hash)
+                VALUES (%s, %s)
+                RETURNING id, username, created_at;
+                """,
+                (clean_username, hashed_pw)
+            )
+            new_user = cur.fetchone()
+        conn.commit()
+        return {"message": "Account created successfully.", "user": new_user}
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        raise HTTPException(status_code=409, detail="Username already exists.")
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.post("/api/v1/auth/login", dependencies=[Depends(verify_api_key)])
+def login_user(user: UserAuth):
+    clean_username = user.username.strip()
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, username, password_hash FROM users WHERE username = %s;",
+                (clean_username,)
+            )
+            db_user = cur.fetchone()
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+    if not db_user or not bcrypt.checkpw(user.password.encode("utf-8"), db_user["password_hash"].encode("utf-8")):
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+
+    return {
+        "message": "Login successful.",
+        "user": {
+            "id": db_user["id"],
+            "username": db_user["username"]
+        }
+    }
