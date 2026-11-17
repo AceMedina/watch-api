@@ -104,10 +104,19 @@ class WatchUpdate(BaseModel):
     image: Optional[str] = Field(default=None, min_length=1)
     description: Optional[str] = Field(default=None, min_length=1)
 
-# User Data Model
+# User, Favorite & Review Data Models
 class UserAuth(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=4, max_length=72)
+
+class FavoriteCreate(BaseModel):
+    user_id: int
+    watch_id: int
+
+class ReviewCreate(BaseModel):
+    user_id: int
+    rating: int = Field(ge=1, le=5)
+    comment: str = Field(min_length=1, max_length=300)
 
 # Authentication
 def verify_api_key(x_api_key: Optional[str] = Header(default=None)):
@@ -117,6 +126,16 @@ def verify_api_key(x_api_key: Optional[str] = Header(default=None)):
             detail="Invalid or missing API key."
         )
     return True
+
+# Audit Log Helper
+def log_activity(cur, action: str, details: str, user_id: Optional[int] = None, watch_id: Optional[int] = None):
+    cur.execute(
+        """
+        INSERT INTO audit_logs (user_id, watch_id, action, details)
+        VALUES (%s, %s, %s, %s);
+        """,
+        (user_id, watch_id, action, details)
+    )
 
 # Public Routes
 @app.get("/")
@@ -130,7 +149,11 @@ def home():
             "/api/v1/watches/{id}",
             "/api/v1/watches/search",
             "/api/v1/auth/register",
-            "/api/v1/auth/login"
+            "/api/v1/auth/login",
+            "/api/v1/users/{user_id}/favorites",
+            "/api/v1/favorites",
+            "/api/v1/watches/{watch_id}/reviews",
+            "/api/v1/audit-logs"
         ]
     }
 
@@ -230,6 +253,7 @@ def create_watch(watch: WatchCreate):
                 )
             )
             new_watch = cur.fetchone()
+            log_activity(cur, "CREATE_WATCH", f"Added {new_watch['brand']} {new_watch['model']}", watch_id=new_watch["id"])
         conn.commit()
         return new_watch
     except psycopg2.IntegrityError:
@@ -259,10 +283,14 @@ def update_watch(watch_id: int, watch: WatchUpdate):
                 values
             )
             updated_watch = cur.fetchone()
-        if not updated_watch:
-            raise HTTPException(status_code=404, detail="Watch not found.")
+            if not updated_watch:
+                raise HTTPException(status_code=404, detail="Watch not found.")
+            log_activity(cur, "UPDATE_WATCH", f"Updated watch ID {watch_id}", watch_id=watch_id)
         conn.commit()
         return updated_watch
+    except HTTPException:
+        conn.rollback()
+        raise
     except psycopg2.IntegrityError:
         conn.rollback()
         raise HTTPException(status_code=409, detail="Duplicate or invalid record.")
@@ -278,12 +306,16 @@ def delete_watch(watch_id: int):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
+            log_activity(cur, "DELETE_WATCH", f"Deleted watch ID {watch_id}", watch_id=watch_id)
             cur.execute("DELETE FROM watches WHERE id = %s RETURNING id;", (watch_id,))
             deleted = cur.fetchone()
-        if not deleted:
-            raise HTTPException(status_code=404, detail="Watch not found.")
+            if not deleted:
+                conn.rollback()
+                raise HTTPException(status_code=404, detail="Watch not found.")
         conn.commit()
         return {"message": f"Watch {watch_id} deleted successfully."}
+    except HTTPException:
+        raise
     except psycopg2.Error:
         conn.rollback()
         raise HTTPException(status_code=500, detail="Database operation failed.")
@@ -308,6 +340,7 @@ def register_user(user: UserAuth):
                 (clean_username, hashed_pw)
             )
             new_user = cur.fetchone()
+            log_activity(cur, "REGISTER", f"User '{clean_username}' registered", user_id=new_user["id"])
         conn.commit()
         return {"message": "Account created successfully.", "user": new_user}
     except psycopg2.IntegrityError:
@@ -331,13 +364,17 @@ def login_user(user: UserAuth):
                 (clean_username,)
             )
             db_user = cur.fetchone()
+            if not db_user or not bcrypt.checkpw(user.password.encode("utf-8"), db_user["password_hash"].encode("utf-8")):
+                raise HTTPException(status_code=401, detail="Invalid username or password.")
+            log_activity(cur, "LOGIN", f"User '{clean_username}' signed in", user_id=db_user["id"])
+        conn.commit()
+    except HTTPException:
+        raise
     except psycopg2.Error:
+        conn.rollback()
         raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
         conn.close()
-
-    if not db_user or not bcrypt.checkpw(user.password.encode("utf-8"), db_user["password_hash"].encode("utf-8")):
-        raise HTTPException(status_code=401, detail="Invalid username or password.")
 
     return {
         "message": "Login successful.",
@@ -347,3 +384,157 @@ def login_user(user: UserAuth):
             "role": db_user["role"]
         }
     }
+
+# Protected Routes - User Favorites (Many-to-Many JOIN)
+@app.get("/api/v1/users/{user_id}/favorites", dependencies=[Depends(verify_api_key)])
+def get_user_favorites(user_id: int):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT w.*, uf.created_at AS favorited_at
+                FROM user_favorites uf
+                INNER JOIN watches w ON uf.watch_id = w.id
+                WHERE uf.user_id = %s
+                ORDER BY uf.created_at DESC;
+                """,
+                (user_id,)
+            )
+            favorites = cur.fetchall()
+        return {"user_id": user_id, "count": len(favorites), "favorites": favorites}
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.post("/api/v1/favorites", status_code=201, dependencies=[Depends(verify_api_key)])
+def add_favorite(fav: FavoriteCreate):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO user_favorites (user_id, watch_id)
+                VALUES (%s, %s)
+                ON CONFLICT (user_id, watch_id) DO NOTHING
+                RETURNING id, user_id, watch_id, created_at;
+                """,
+                (fav.user_id, fav.watch_id)
+            )
+            created = cur.fetchone()
+            if created:
+                log_activity(cur, "ADD_FAVORITE", f"Favorited watch ID {fav.watch_id}", user_id=fav.user_id, watch_id=fav.watch_id)
+        conn.commit()
+        return {"message": "Added to favorites.", "favorite": created}
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        raise HTTPException(status_code=404, detail="User or watch not found.")
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.delete("/api/v1/favorites/{user_id}/{watch_id}", dependencies=[Depends(verify_api_key)])
+def remove_favorite(user_id: int, watch_id: int):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM user_favorites WHERE user_id = %s AND watch_id = %s RETURNING id;",
+                (user_id, watch_id)
+            )
+            deleted = cur.fetchone()
+            if not deleted:
+                raise HTTPException(status_code=404, detail="Favorite not found.")
+            log_activity(cur, "REMOVE_FAVORITE", f"Removed favorite watch ID {watch_id}", user_id=user_id, watch_id=watch_id)
+        conn.commit()
+        return {"message": "Removed from favorites."}
+    except HTTPException:
+        conn.rollback()
+        raise
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+# Protected Routes - Watch Reviews (One-to-Many JOIN)
+@app.get("/api/v1/watches/{watch_id}/reviews", dependencies=[Depends(verify_api_key)])
+def get_watch_reviews(watch_id: int):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT r.id, r.watch_id, r.user_id, u.username, r.rating, r.comment, r.created_at
+                FROM watch_reviews r
+                INNER JOIN users u ON r.user_id = u.id
+                WHERE r.watch_id = %s
+                ORDER BY r.created_at DESC;
+                """,
+                (watch_id,)
+            )
+            reviews = cur.fetchall()
+        avg_rating = round(sum(r["rating"] for r in reviews) / len(reviews), 1) if reviews else 0
+        return {"watch_id": watch_id, "count": len(reviews), "average_rating": avg_rating, "reviews": reviews}
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.post("/api/v1/watches/{watch_id}/reviews", status_code=201, dependencies=[Depends(verify_api_key)])
+def upsert_watch_review(watch_id: int, review: ReviewCreate):
+    clean_comment = review.comment.strip()
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO watch_reviews (user_id, watch_id, rating, comment)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (user_id, watch_id)
+                DO UPDATE SET rating = EXCLUDED.rating, comment = EXCLUDED.comment, created_at = NOW()
+                RETURNING id, user_id, watch_id, rating, comment, created_at;
+                """,
+                (review.user_id, watch_id, review.rating, clean_comment)
+            )
+            saved_review = cur.fetchone()
+            log_activity(cur, "REVIEW_WATCH", f"Rated watch ID {watch_id} ({review.rating}/5)", user_id=review.user_id, watch_id=watch_id)
+        conn.commit()
+        return {"message": "Review saved.", "review": saved_review}
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        raise HTTPException(status_code=404, detail="User or watch not found.")
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+# Protected Routes - Audit Logs (Multi-Table LEFT JOIN)
+@app.get("/api/v1/audit-logs", dependencies=[Depends(verify_api_key)])
+def get_audit_logs(limit: int = Query(default=30, ge=1, le=100)):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT a.id, a.action, a.details, a.created_at,
+                       u.username,
+                       w.brand AS watch_brand, w.model AS watch_model
+                FROM audit_logs a
+                LEFT JOIN users u ON a.user_id = u.id
+                LEFT JOIN watches w ON a.watch_id = w.id
+                ORDER BY a.created_at DESC
+                LIMIT %s;
+                """,
+                (limit,)
+            )
+            logs = cur.fetchall()
+        return {"count": len(logs), "logs": logs}
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
