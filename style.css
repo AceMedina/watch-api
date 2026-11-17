@@ -57,6 +57,20 @@ html {
     opacity: 0.8;
 }
 
+.nav-link-btn {
+    background: none;
+    border: none;
+    color: #F3EFE8;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.2s;
+}
+
+.nav-link-btn:hover {
+    opacity: 0.8;
+}
+
 .nav-disabled {
     color: rgba(243, 239, 232, 0.4);
     font-size: 0.95rem;
@@ -369,6 +383,20 @@ html {
     background-color: #1F493D;
 }
 
+.search-bar-wrap .fav-filter-btn {
+    background-color: #FDFDFD;
+    color: #336659;
+    border: 1px solid #336659;
+    padding: 0 22px;
+}
+
+.search-bar-wrap .fav-filter-btn:hover,
+.search-bar-wrap .fav-filter-btn.active {
+    background-color: #1F493D;
+    color: #FDFDFD;
+    border-color: #1F493D;
+}
+
 /* GRID */
 .watch-grid {
     display: grid;
@@ -419,6 +447,7 @@ html {
 }
 
 .card-top {
+    position: relative;
     background-color: #336659;
     border-radius: 6px;
     height: 190px;
@@ -427,6 +456,15 @@ html {
     justify-content: center;
     margin-bottom: 16px;
     overflow: hidden;
+}
+
+.card-fav-dot {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    color: #F3EFE8;
+    font-size: 1rem;
+    z-index: 2;
 }
 
 .card-top img {
@@ -482,11 +520,14 @@ html {
 .modal-card {
     background-color: #FDFDFD;
     width: 100%;
-    max-width: 800px;
+    max-width: 860px;
+    max-height: 90vh;
     border-radius: 8px;
     position: relative;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-close {
@@ -503,7 +544,8 @@ html {
 
 .modal-body {
     display: grid;
-    grid-template-columns: 1fr 1.2fr;
+    grid-template-columns: 1fr 1.3fr;
+    overflow-y: auto;
 }
 
 .modal-image-col {
@@ -524,6 +566,33 @@ html {
     padding: 36px 32px;
     display: flex;
     flex-direction: column;
+}
+
+.modal-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding-right: 24px;
+}
+
+.modal-fav-btn {
+    background: transparent;
+    color: #336659;
+    border: none;
+    padding: 0 4px;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.15s;
+}
+
+.modal-fav-btn:hover {
+    color: #1F493D;
+    transform: scale(1.12);
+}
+.modal-fav-btn.saved {
+    color: #1F493D;
 }
 
 .modal-brand {
@@ -553,7 +622,7 @@ html {
     display: grid;
     grid-template-columns: 1fr;
     gap: 4px;
-    max-height: 220px;
+    max-height: 170px;
     overflow-y: auto;
     padding-right: 6px;
 }
@@ -561,19 +630,177 @@ html {
 .modal-meta p {
     font-size: 0.9rem;
     color: #3D3D3D;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .modal-divider {
     height: 1px;
     background-color: #E6E0D5;
-    margin: 16px 0;
+    margin: 14px 0;
 }
 
 .modal-description {
-    font-size: 0.95rem;
-    line-height: 1.6;
+    font-size: 0.92rem;
+    line-height: 1.55;
     color: #4A4A4A;
+}
+
+/* REVIEWS IN MODAL */
+.modal-reviews-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.reviews-header h4 {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-size: 1.1rem;
+    color: #3D3D3D;
+}
+
+.rating-summary {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #336659;
+}
+
+.review-form {
+    display: flex;
+    gap: 8px;
+}
+
+.review-form select,
+.review-form input {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    border: 1px solid #D5CEBF;
+    background-color: #F3EFE8;
+    border-radius: 4px;
+    color: #3D3D3D;
+    outline: none;
+}
+
+.review-form input {
+    flex: 1;
+}
+
+.review-form select:focus,
+.review-form input:focus {
+    border-color: #336659;
+    background-color: #FDFDFD;
+}
+
+.review-form button {
+    background-color: #336659;
+    color: #FDFDFD;
+    border: none;
+    padding: 0 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.review-form button:hover {
+    background-color: #1F493D;
+}
+
+.review-guest-hint {
+    font-size: 0.82rem;
+    color: #666;
+    font-style: italic;
+}
+
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 130px;
+    overflow-y: auto;
+}
+
+.review-item {
+    background-color: #F3EFE8;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.review-item-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+.review-author {
+    font-weight: 700;
+    color: #1F493D;
+}
+
+.review-stars {
+    color: #336659;
+    letter-spacing: 1px;
+}
+
+.review-text {
+    font-size: 0.84rem;
+    color: #3D3D3D;
+}
+
+.review-empty {
+    font-size: 0.84rem;
+    color: #777;
+}
+
+/* ADMIN AUDIT MODAL */
+.audit-modal-card {
+    max-width: 680px;
+}
+
+.audit-modal-body {
+    padding: 32px;
+}
+
+.audit-logs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 55vh;
+    overflow-y: auto;
+}
+
+.audit-log-item {
+    background-color: #F3EFE8;
+    padding: 10px 14px;
+    border-radius: 4px;
+}
+
+.audit-log-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+}
+
+.audit-action {
+    font-weight: 700;
+    color: #1F493D;
+    letter-spacing: 0.5px;
+}
+
+.audit-time {
+    color: #666;
+}
+
+.audit-details {
+    font-size: 0.88rem;
+    color: #3D3D3D;
 }
 
 /* AUTH PAGE (FULL SCREEN SPLIT) */
@@ -829,6 +1056,9 @@ html {
     }
     .auth-brand {
         font-size: 2.5rem;
+    }
+    .search-bar-wrap {
+        flex-wrap: wrap;
     }
 }
 

@@ -7,10 +7,21 @@ if (!rawUser) {
 const currentUser = rawUser ? JSON.parse(rawUser) : { username: "Guest", role: "guest" };
 const userRole = currentUser.role || "guest";
 const isGuest = userRole === "guest";
+const isAdmin = userRole === "admin";
 
 const roleBadge = document.getElementById("userRoleBadge");
 if (roleBadge) {
     roleBadge.textContent = userRole.toUpperCase();
+}
+
+if (isAdmin) {
+    const auditBtn = document.getElementById("auditLogNavBtn");
+    if (auditBtn) auditBtn.style.display = "inline-block";
+}
+
+if (!isGuest) {
+    const favFilterBtn = document.getElementById("favoritesFilterBtn");
+    if (favFilterBtn) favFilterBtn.style.display = "inline-block";
 }
 
 function logoutUser() {
@@ -26,16 +37,23 @@ const requestHeaders = {
     "x-api-key": API_KEY
 };
 
+const jsonHeaders = {
+    "Content-Type": "application/json",
+    "x-api-key": API_KEY
+};
+
 let allWatches = [];
 let featuredWatches = [];
+let favoriteWatchIds = new Set();
+let showingFavoritesOnly = false;
+let activeModalWatch = null;
 let currentHeroIndex = 0;
 let selectedBrand = "";
 let isHeroAnimating = false;
 
-// FETCH WATCHES
+// FETCH WATCHES & USER FAVORITES
 async function loadWatches() {
     try {
-        // Tries standard endpoint first, falls back to /api/v1/watches
         let response = await fetch(`${API_URL}/watches`);
         if (!response.ok) {
             response = await fetch(`${API_URL}/api/v1/watches`, { headers: requestHeaders });
@@ -43,17 +61,17 @@ async function loadWatches() {
 
         const data = await response.json();
         allWatches = isGuest ? data.watches.slice(0, 10) : data.watches;
-        
-        // Hero takes the first 5 watches
         featuredWatches = allWatches.slice(0, 5);
-        
-        // Displays watches into the catalog grid
+
+        if (!isGuest && currentUser.id) {
+            await loadUserFavorites();
+        }
+
         displayWatches(allWatches);
         if (featuredWatches.length > 0) {
             updateHero(0);
         }
 
-        // Show preview notice for Guests
         if (isGuest) {
             const catalogContainer = document.querySelector(".catalog-container");
             const notice = document.createElement("p");
@@ -64,6 +82,18 @@ async function loadWatches() {
     } catch (error) {
         console.error(error);
         document.getElementById("watchGrid").innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#3D3D3D;'>Unable to connect to the Horology API.</p>";
+    }
+}
+
+async function loadUserFavorites() {
+    try {
+        const res = await fetch(`${API_URL}/api/v1/users/${currentUser.id}/favorites`, { headers: requestHeaders });
+        if (res.ok) {
+            const data = await res.json();
+            favoriteWatchIds = new Set(data.favorites.map(w => w.id));
+        }
+    } catch (err) {
+        console.error(err);
     }
 }
 
@@ -82,8 +112,12 @@ function displayWatches(watches) {
         card.className = "watch-card";
         card.onclick = () => openModal(watch);
 
+        const isFav = favoriteWatchIds.has(watch.id);
+        const favTag = isFav ? `<span class="card-fav-dot" title="Saved in Favorites">&#9733;</span>` : "";
+
         card.innerHTML = `
             <div class="card-top">
+                ${favTag}
                 <img src="${watch.image}" alt="${watch.model}" onerror="this.src='https://placehold.co/300x300/336659/FDFDFD?text=${encodeURIComponent(watch.brand)}'">
             </div>
             <div class="card-bottom">
@@ -94,6 +128,191 @@ function displayWatches(watches) {
 
         grid.appendChild(card);
     });
+}
+
+// FAVORITES FILTER & TOGGLE
+function toggleFavoritesFilter() {
+    const btn = document.getElementById("favoritesFilterBtn");
+    showingFavoritesOnly = !showingFavoritesOnly;
+
+    document.querySelectorAll(".brand-circle").forEach(b => b.classList.remove("active"));
+    document.getElementById("searchInput").value = "";
+    selectedBrand = "";
+
+    if (showingFavoritesOnly) {
+        btn.classList.add("active");
+        const favWatches = allWatches.filter(w => favoriteWatchIds.has(w.id));
+        displayWatches(favWatches);
+    } else {
+        btn.classList.remove("active");
+        displayWatches(allWatches);
+    }
+}
+
+function updateModalFavoriteButton() {
+    const favBtn = document.getElementById("modalFavBtn");
+    if (!favBtn || !activeModalWatch) return;
+
+    if (isGuest) {
+        favBtn.innerHTML = "&#9734;";
+        favBtn.title = "Sign in to save to favorites";
+        favBtn.classList.remove("saved");
+        return;
+    }
+
+    const isFav = favoriteWatchIds.has(activeModalWatch.id);
+    favBtn.innerHTML = isFav ? "&#9733;" : "&#9734;";
+    favBtn.title = isFav ? "Saved in Favorites" : "Save to Favorites";
+    favBtn.classList.toggle("saved", isFav);
+}
+
+async function toggleWatchFavorite() {
+    if (!activeModalWatch) return;
+    if (isGuest || !currentUser.id) {
+        logoutUser();
+        return;
+    }
+
+    const watchId = activeModalWatch.id;
+    const isFav = favoriteWatchIds.has(watchId);
+
+    try {
+        if (isFav) {
+            const res = await fetch(`${API_URL}/api/v1/favorites/${currentUser.id}/${watchId}`, {
+                method: "DELETE",
+                headers: requestHeaders
+            });
+            if (res.ok) favoriteWatchIds.delete(watchId);
+        } else {
+            const res = await fetch(`${API_URL}/api/v1/favorites`, {
+                method: "POST",
+                headers: jsonHeaders,
+                body: JSON.stringify({ user_id: currentUser.id, watch_id: watchId })
+            });
+            if (res.ok) favoriteWatchIds.add(watchId);
+        }
+
+        updateModalFavoriteButton();
+
+        if (showingFavoritesOnly) {
+            displayWatches(allWatches.filter(w => favoriteWatchIds.has(w.id)));
+        } else if (selectedBrand) {
+            displayWatches(allWatches.filter(w => w.brand.toLowerCase() === selectedBrand.toLowerCase()));
+        } else {
+            displayWatches(allWatches);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// REVIEWS (1-5 STARS + SHORT COMMENT)
+async function loadWatchReviews(watchId) {
+    const listEl = document.getElementById("modalReviewsList");
+    const summaryEl = document.getElementById("modalRatingSummary");
+    listEl.innerHTML = "<p class='review-empty'>Loading reviews...</p>";
+
+    try {
+        const res = await fetch(`${API_URL}/api/v1/watches/${watchId}/reviews`, { headers: requestHeaders });
+        if (!res.ok) throw new Error("Failed to load reviews.");
+
+        const data = await res.json();
+        if (data.count === 0) {
+            summaryEl.textContent = "No ratings yet";
+            listEl.innerHTML = "<p class='review-empty'>No reviews yet.</p>";
+            return;
+        }
+
+        summaryEl.textContent = `${data.average_rating} / 5 (${data.count})`;
+        listEl.innerHTML = "";
+
+        data.reviews.forEach(rev => {
+            const stars = "★".repeat(rev.rating) + "☆".repeat(5 - rev.rating);
+            const item = document.createElement("div");
+            item.className = "review-item";
+            item.innerHTML = `
+                <div class="review-item-top">
+                    <span class="review-author">${rev.username}</span>
+                    <span class="review-stars">${stars}</span>
+                </div>
+                <p class="review-text">${rev.comment}</p>
+            `;
+            listEl.appendChild(item);
+        });
+    } catch (err) {
+        summaryEl.textContent = "";
+        listEl.innerHTML = "<p class='review-empty'>Unable to load reviews.</p>";
+    }
+}
+
+async function submitWatchReview(event) {
+    event.preventDefault();
+    if (!activeModalWatch || isGuest || !currentUser.id) return;
+
+    const rating = parseInt(document.getElementById("reviewRating").value, 10);
+    const commentInput = document.getElementById("reviewComment");
+    const comment = commentInput.value.trim();
+    if (!comment) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/v1/watches/${activeModalWatch.id}/reviews`, {
+            method: "POST",
+            headers: jsonHeaders,
+            body: JSON.stringify({
+                user_id: currentUser.id,
+                rating: rating,
+                comment: comment
+            })
+        });
+
+        if (res.ok) {
+            commentInput.value = "";
+            await loadWatchReviews(activeModalWatch.id);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// ADMIN AUDIT LOGS MODAL
+async function openAuditModal() {
+    if (!isAdmin) return;
+    const modal = document.getElementById("auditModal");
+    const listEl = document.getElementById("auditLogsList");
+    listEl.innerHTML = "<p class='review-empty'>Loading activity logs...</p>";
+    modal.classList.add("open");
+
+    try {
+        const res = await fetch(`${API_URL}/api/v1/audit-logs?limit=30`, { headers: requestHeaders });
+        const data = await res.json();
+
+        if (!data.logs || data.logs.length === 0) {
+            listEl.innerHTML = "<p class='review-empty'>No activity recorded yet.</p>";
+            return;
+        }
+
+        listEl.innerHTML = "";
+        data.logs.forEach(log => {
+            const timeStr = new Date(log.created_at).toLocaleString();
+            const actor = log.username || "System";
+            const row = document.createElement("div");
+            row.className = "audit-log-item";
+            row.innerHTML = `
+                <div class="audit-log-top">
+                    <span class="audit-action">${log.action}</span>
+                    <span class="audit-time">${timeStr}</span>
+                </div>
+                <p class="audit-details"><strong>${actor}:</strong> ${log.details || ""}</p>
+            `;
+            listEl.appendChild(row);
+        });
+    } catch (err) {
+        listEl.innerHTML = "<p class='review-empty'>Unable to load activity logs.</p>";
+    }
+}
+
+function closeAuditModal() {
+    document.getElementById("auditModal").classList.remove("open");
 }
 
 // HERO UPDATE
@@ -114,7 +333,6 @@ function updateHero(index) {
         heroImg.src = `https://placehold.co/500x500/1F493D/F3EFE8?text=${encodeURIComponent(watch.model)}`;
     };
 
-    // Numbering Folio
     const heroPagination = document.getElementById("heroPagination");
     if (heroPagination) {
         const currentNum = String(currentHeroIndex + 1).padStart(2, '0');
@@ -175,6 +393,9 @@ async function searchWatches() {
     const query = document.getElementById("searchInput").value.trim();
     
     document.querySelectorAll(".brand-circle").forEach(btn => btn.classList.remove("active"));
+    const favBtn = document.getElementById("favoritesFilterBtn");
+    if (favBtn) favBtn.classList.remove("active");
+    showingFavoritesOnly = false;
     selectedBrand = "";
 
     if (!query) {
@@ -182,7 +403,6 @@ async function searchWatches() {
         return;
     }
 
-    // Guests search within their 10 allowed watches only
     if (isGuest) {
         const filtered = allWatches.filter(w => 
             w.brand.toLowerCase().includes(query.toLowerCase()) ||
@@ -203,7 +423,6 @@ async function searchWatches() {
         const data = await response.json();
         displayWatches(data.results);
     } catch (error) {
-        // Fallback local client search across all watches
         const filtered = allWatches.filter(w => 
             w.brand.toLowerCase().includes(query.toLowerCase()) ||
             w.model.toLowerCase().includes(query.toLowerCase()) ||
@@ -220,6 +439,9 @@ function toggleBrandFilter(brandName, element) {
     const isAlreadySelected = element.classList.contains("active");
 
     document.querySelectorAll(".brand-circle").forEach(btn => btn.classList.remove("active"));
+    const favBtn = document.getElementById("favoritesFilterBtn");
+    if (favBtn) favBtn.classList.remove("active");
+    showingFavoritesOnly = false;
     document.getElementById("searchInput").value = "";
 
     if (isAlreadySelected) {
@@ -233,8 +455,10 @@ function toggleBrandFilter(brandName, element) {
     }
 }
 
-// MODAL (Populates full technical details)
+// MODAL (Populates full technical details, favorite state & reviews)
 function openModal(watch) {
+    activeModalWatch = watch;
+
     document.getElementById("modalBrand").innerText = watch.brand;
     document.getElementById("modalTitle").innerText = watch.model;
     document.getElementById("modalNickname").innerText = `"${watch.nickname}"`;
@@ -242,7 +466,6 @@ function openModal(watch) {
     document.getElementById("modalMaterial").innerText = watch.case_material;
     document.getElementById("modalDescription").innerText = watch.description;
 
-    // Additional fields from expanded 30-watch dataset
     const sizeVal = watch.case_size_mm ? `${watch.case_size_mm} mm` : (watch.case_size || "N/A");
     document.getElementById("modalSize").innerText = sizeVal;
     document.getElementById("modalDial").innerText = watch.dial_color || "N/A";
@@ -266,16 +489,33 @@ function openModal(watch) {
         modalImg.src = `https://placehold.co/400x400/336659/FDFDFD?text=${encodeURIComponent(watch.model)}`;
     };
 
+    const reviewForm = document.getElementById("reviewForm");
+    const reviewHint = document.getElementById("reviewGuestHint");
+    if (isGuest) {
+        reviewForm.style.display = "none";
+        reviewHint.style.display = "block";
+    } else {
+        reviewForm.style.display = "flex";
+        reviewHint.style.display = "none";
+    }
+
+    updateModalFavoriteButton();
+    loadWatchReviews(watch.id);
+
     document.getElementById("detailModal").classList.add("open");
 }
 
 function closeModal() {
     document.getElementById("detailModal").classList.remove("open");
+    activeModalWatch = null;
 }
 
 function handleBackdropClick(event) {
     if (event.target.id === "detailModal") {
         closeModal();
+    }
+    if (event.target.id === "auditModal") {
+        closeAuditModal();
     }
 }
 

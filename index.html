@@ -15,6 +15,7 @@
             <nav class="nav-links">
                 <a href="#hero">Home</a>
                 <a href="#collections">Collections</a>
+                <button type="button" id="auditLogNavBtn" class="nav-link-btn" style="display: none;" onclick="openAuditModal()">Activity Logs</button>
                 <span id="userRoleBadge" class="nav-role-badge"></span>
                 <button type="button" class="nav-logout-btn" onclick="logoutUser()">Log Out</button>
             </nav>
@@ -78,6 +79,7 @@
             <div class="search-bar-wrap">
                 <input type="text" id="searchInput" placeholder="Search by model, reference, movement...">
                 <button id="searchBtn" onclick="searchWatches()">SEARCH</button>
+                <button type="button" id="favoritesFilterBtn" class="fav-filter-btn" style="display: none;" onclick="toggleFavoritesFilter()">MY FAVORITES</button>
             </div>
 
             <!-- CATALOG GRID -->
@@ -94,9 +96,14 @@
                     <img id="modalImage" src="" alt="Watch Detail">
                 </div>
                 <div class="modal-info-col">
-                    <p class="modal-brand" id="modalBrand">BRAND</p>
-                    <h2 class="modal-title" id="modalTitle">Model Name</h2>
-                    <h3 class="modal-nickname" id="modalNickname">"Nickname"</h3>
+                    <div class="modal-header-row">
+                        <div>
+                            <p class="modal-brand" id="modalBrand">BRAND</p>
+                            <h2 class="modal-title" id="modalTitle">Model Name</h2>
+                            <h3 class="modal-nickname" id="modalNickname">"Nickname"</h3>
+                        </div>
+                        <button type="button" id="modalFavBtn" class="modal-fav-btn" onclick="toggleWatchFavorite()" title="Save to Favorites" aria-label="Save to Favorites">&#9734;</button>
+                    </div>
                     
                     <div class="modal-meta">
                         <p><strong>Reference Number:</strong> <span id="modalRef"></span></p>
@@ -112,7 +119,45 @@
 
                     <div class="modal-divider"></div>
                     <p class="modal-description" id="modalDescription"></p>
+
+                    <div class="modal-divider"></div>
+
+                    <!-- REVIEWS SECTION -->
+                    <div class="modal-reviews-section">
+                        <div class="reviews-header">
+                            <h4>Reviews</h4>
+                            <span id="modalRatingSummary" class="rating-summary">No ratings yet</span>
+                        </div>
+
+                        <form id="reviewForm" class="review-form" onsubmit="submitWatchReview(event)">
+                            <select id="reviewRating" aria-label="Star Rating">
+                                <option value="5">★★★★★ (5)</option>
+                                <option value="4">★★★★☆ (4)</option>
+                                <option value="3">★★★☆☆ (3)</option>
+                                <option value="2">★★☆☆☆ (2)</option>
+                                <option value="1">★☆☆☆☆ (1)</option>
+                            </select>
+                            <input type="text" id="reviewComment" placeholder="Write a short comment..." maxlength="300" required>
+                            <button type="submit">POST</button>
+                        </form>
+                        <p id="reviewGuestHint" class="review-guest-hint" style="display: none;">Sign in with an account to rate and review.</p>
+
+                        <div id="modalReviewsList" class="reviews-list"></div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN AUDIT LOGS MODAL -->
+    <div id="auditModal" class="modal-overlay" onclick="handleBackdropClick(event)">
+        <div class="modal-card audit-modal-card">
+            <button class="modal-close" onclick="closeAuditModal()">&times;</button>
+            <div class="audit-modal-body">
+                <p class="modal-brand">ADMINISTRATION</p>
+                <h2 class="modal-title">Activity & Audit Logs</h2>
+                <div class="modal-divider"></div>
+                <div id="auditLogsList" class="audit-logs-list"></div>
             </div>
         </div>
     </div>
