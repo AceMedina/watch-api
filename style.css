@@ -63,6 +63,16 @@ html {
     cursor: default;
 }
 
+.nav-role-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: #F3EFE8;
+    background-color: rgba(243, 239, 232, 0.15);
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
 .nav-logout-btn {
     background: transparent;
     border: 1px solid rgba(243, 239, 232, 0.45);
@@ -366,6 +376,31 @@ html {
     gap: 24px;
 }
 
+.guest-limit-banner {
+    margin-top: 36px;
+    padding: 16px 20px;
+    background-color: #FDFDFD;
+    border: 1px solid #D5CEBF;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.92rem;
+    color: #3D3D3D;
+}
+
+.guest-limit-banner button {
+    background: none;
+    border: none;
+    color: #336659;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.92rem;
+}
+
+.guest-limit-banner button:hover {
+    color: #1F493D;
+}
+
 /* CARDS */
 .watch-card {
     background-color: #FDFDFD;
@@ -605,6 +640,7 @@ html {
 .auth-form-title,
 .auth-subtitle,
 .auth-form,
+.guest-btn,
 .auth-switch {
     width: 100%;
     max-width: 420px;
@@ -692,6 +728,25 @@ html {
 .auth-btn:disabled {
     opacity: 0.65;
     cursor: not-allowed;
+}
+
+.guest-btn {
+    background-color: transparent;
+    color: #336659;
+    border: 1px solid #336659;
+    padding: 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.guest-btn:hover {
+    background-color: #F3EFE8;
+    color: #1F493D;
 }
 
 .auth-switch {

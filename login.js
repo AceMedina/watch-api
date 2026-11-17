@@ -14,11 +14,19 @@ if (localStorage.getItem("watch_user")) {
 let isRegisterMode = false;
 
 const authForm = document.getElementById("authForm");
+const authFormTitle = document.getElementById("authFormTitle");
 const authSubtitle = document.getElementById("authSubtitle");
 const authSubmitBtn = document.getElementById("authSubmitBtn");
+const guestLoginBtn = document.getElementById("guestLoginBtn");
 const switchPrompt = document.getElementById("switchPrompt");
 const switchModeBtn = document.getElementById("switchModeBtn");
 const authMessage = document.getElementById("authMessage");
+
+// Continue as Guest
+guestLoginBtn.addEventListener("click", () => {
+    localStorage.setItem("watch_user", JSON.stringify({ username: "Guest", role: "guest" }));
+    window.location.href = "index.html";
+});
 
 // Toggle between Login and Register
 switchModeBtn.addEventListener("click", () => {
@@ -27,12 +35,14 @@ switchModeBtn.addEventListener("click", () => {
     authMessage.className = "auth-message";
 
     if (isRegisterMode) {
-        authSubtitle.textContent = "Create an account to explore the collection.";
+        authFormTitle.textContent = "Create Account";
+        authSubtitle.textContent = "Create an account to view the full collection.";
         authSubmitBtn.textContent = "CREATE ACCOUNT";
         switchPrompt.textContent = "Already have an account?";
         switchModeBtn.textContent = "Sign In";
     } else {
-        authSubtitle.textContent = "Sign in to access the private collection.";
+        authFormTitle.textContent = "Sign In";
+        authSubtitle.textContent = "Enter your account details below.";
         authSubmitBtn.textContent = "SIGN IN";
         switchPrompt.textContent = "Don't have an account?";
         switchModeBtn.textContent = "Create Account";
@@ -69,7 +79,8 @@ authForm.addEventListener("submit", async (e) => {
             authMessage.textContent = "Account created! Please sign in.";
             authMessage.className = "auth-message success";
             isRegisterMode = false;
-            authSubtitle.textContent = "Sign in to access the private collection.";
+            authFormTitle.textContent = "Sign In";
+            authSubtitle.textContent = "Enter your account details below.";
             authSubmitBtn.textContent = "SIGN IN";
             switchPrompt.textContent = "Don't have an account?";
             switchModeBtn.textContent = "Create Account";

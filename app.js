@@ -1,7 +1,16 @@
-// Route Guard & Logout
-const currentUser = localStorage.getItem("watch_user");
-if (!currentUser) {
+// Route Guard, Role Check & Logout
+const rawUser = localStorage.getItem("watch_user");
+if (!rawUser) {
     window.location.href = "login.html";
+}
+
+const currentUser = rawUser ? JSON.parse(rawUser) : { username: "Guest", role: "guest" };
+const userRole = currentUser.role || "guest";
+const isGuest = userRole === "guest";
+
+const roleBadge = document.getElementById("userRoleBadge");
+if (roleBadge) {
+    roleBadge.textContent = userRole.toUpperCase();
 }
 
 function logoutUser() {
@@ -33,15 +42,24 @@ async function loadWatches() {
         }
 
         const data = await response.json();
-        allWatches = data.watches;
+        allWatches = isGuest ? data.watches.slice(0, 10) : data.watches;
         
         // Hero takes the first 5 watches
         featuredWatches = allWatches.slice(0, 5);
         
-        // Displays all 30 watches into the catalog grid
+        // Displays watches into the catalog grid
         displayWatches(allWatches);
         if (featuredWatches.length > 0) {
             updateHero(0);
+        }
+
+        // Show preview notice for Guests
+        if (isGuest) {
+            const catalogContainer = document.querySelector(".catalog-container");
+            const notice = document.createElement("p");
+            notice.className = "guest-limit-banner";
+            notice.innerHTML = `Guest Preview: Showing first 10 watches only. <button type="button" onclick="logoutUser()">Sign in with an account</button> to unlock all ${data.watches.length} timepieces.`;
+            catalogContainer.appendChild(notice);
         }
     } catch (error) {
         console.error(error);
@@ -49,7 +67,7 @@ async function loadWatches() {
     }
 }
 
-// RENDER GRID (ALL 30 WATCHES)
+// RENDER GRID
 function displayWatches(watches) {
     const grid = document.getElementById("watchGrid");
     grid.innerHTML = "";
@@ -164,6 +182,19 @@ async function searchWatches() {
         return;
     }
 
+    // Guests search within their 10 allowed watches only
+    if (isGuest) {
+        const filtered = allWatches.filter(w => 
+            w.brand.toLowerCase().includes(query.toLowerCase()) ||
+            w.model.toLowerCase().includes(query.toLowerCase()) ||
+            w.nickname.toLowerCase().includes(query.toLowerCase()) ||
+            w.reference_number.toLowerCase().includes(query.toLowerCase()) ||
+            (w.category && w.category.toLowerCase().includes(query.toLowerCase()))
+        );
+        displayWatches(filtered);
+        return;
+    }
+
     try {
         let response = await fetch(`${API_URL}/watches/search?q=${encodeURIComponent(query)}`);
         if (!response.ok) {
@@ -172,7 +203,7 @@ async function searchWatches() {
         const data = await response.json();
         displayWatches(data.results);
     } catch (error) {
-        // Fallback local client search across all 30 watches
+        // Fallback local client search across all watches
         const filtered = allWatches.filter(w => 
             w.brand.toLowerCase().includes(query.toLowerCase()) ||
             w.model.toLowerCase().includes(query.toLowerCase()) ||
@@ -184,7 +215,7 @@ async function searchWatches() {
     }
 }
 
-// BRAND FILTER (Filters across all 30 watches)
+// BRAND FILTER
 function toggleBrandFilter(brandName, element) {
     const isAlreadySelected = element.classList.contains("active");
 
@@ -202,7 +233,7 @@ function toggleBrandFilter(brandName, element) {
     }
 }
 
-// MODAL (Populates full technical details for 30 watches)
+// MODAL (Populates full technical details)
 function openModal(watch) {
     document.getElementById("modalBrand").innerText = watch.brand;
     document.getElementById("modalTitle").innerText = watch.model;

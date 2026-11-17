@@ -303,7 +303,7 @@ def register_user(user: UserAuth):
                 """
                 INSERT INTO users (username, password_hash)
                 VALUES (%s, %s)
-                RETURNING id, username, created_at;
+                RETURNING id, username, role, created_at;
                 """,
                 (clean_username, hashed_pw)
             )
@@ -327,7 +327,7 @@ def login_user(user: UserAuth):
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, username, password_hash FROM users WHERE username = %s;",
+                "SELECT id, username, password_hash, role FROM users WHERE username = %s;",
                 (clean_username,)
             )
             db_user = cur.fetchone()
@@ -343,6 +343,7 @@ def login_user(user: UserAuth):
         "message": "Login successful.",
         "user": {
             "id": db_user["id"],
-            "username": db_user["username"]
+            "username": db_user["username"],
+            "role": db_user["role"]
         }
     }
