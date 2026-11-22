@@ -76,7 +76,7 @@ async function loadWatches() {
             const catalogContainer = document.querySelector(".catalog-container");
             const notice = document.createElement("p");
             notice.className = "guest-limit-banner";
-            notice.innerHTML = `Guest Preview: Showing first 10 watches only. <button type="button" onclick="logoutUser()">Sign in with an account</button> to unlock all ${data.watches.length} timepieces.`;
+            notice.innerHTML = `Guest Preview: Showing first 10 watches only. <button type="button" onclick="logoutUser()">Sign in with an account</button> to unlock all timepieces.`;
             catalogContainer.appendChild(notice);
         }
     } catch (error) {
