@@ -118,7 +118,7 @@ class ReviewCreate(BaseModel):
     rating: int = Field(ge=1, le=5)
     comment: str = Field(min_length=1, max_length=300)
 
-# Authentication
+# Authentication & Role Verification
 def verify_api_key(x_api_key: Optional[str] = Header(default=None)):
     if not x_api_key or x_api_key not in VALID_API_KEYS:
         raise HTTPException(
@@ -126,6 +126,32 @@ def verify_api_key(x_api_key: Optional[str] = Header(default=None)):
             detail="Invalid or missing API key."
         )
     return True
+
+def verify_admin(
+    x_api_key: bool = Depends(verify_api_key),
+    x_user_id: Optional[int] = Header(default=None)
+):
+    if not x_user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin privileges required (missing x-user-id)."
+        )
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, username, role FROM users WHERE id = %s;", (x_user_id,))
+            admin_user = cur.fetchone()
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+    if not admin_user or admin_user["role"] != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Admin privileges required."
+        )
+    return admin_user
 
 # Audit Log Helper
 def log_activity(cur, action: str, details: str, user_id: Optional[int] = None, watch_id: Optional[int] = None):
@@ -224,9 +250,9 @@ def get_watch(watch_id: int):
     finally:
         conn.close()
 
-# Protected Routes - Create
-@app.post("/api/v1/watches", response_model=Watch, status_code=201, dependencies=[Depends(verify_api_key)])
-def create_watch(watch: WatchCreate):
+# Admin Routes - Create
+@app.post("/api/v1/watches", response_model=Watch, status_code=201)
+def create_watch(watch: WatchCreate, admin_user: dict = Depends(verify_admin)):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
@@ -253,7 +279,13 @@ def create_watch(watch: WatchCreate):
                 )
             )
             new_watch = cur.fetchone()
-            log_activity(cur, "CREATE_WATCH", f"Added {new_watch['brand']} {new_watch['model']}", watch_id=new_watch["id"])
+            log_activity(
+                cur,
+                "CREATE_WATCH",
+                f"Added {new_watch['brand']} {new_watch['model']}",
+                user_id=admin_user["id"],
+                watch_id=new_watch["id"]
+            )
         conn.commit()
         return new_watch
     except psycopg2.IntegrityError:
@@ -265,9 +297,9 @@ def create_watch(watch: WatchCreate):
     finally:
         conn.close()
 
-# Protected Routes - Update
-@app.patch("/api/v1/watches/{watch_id}", response_model=Watch, dependencies=[Depends(verify_api_key)])
-def update_watch(watch_id: int, watch: WatchUpdate):
+# Admin Routes - Update
+@app.patch("/api/v1/watches/{watch_id}", response_model=Watch)
+def update_watch(watch_id: int, watch: WatchUpdate, admin_user: dict = Depends(verify_admin)):
     updates = watch.model_dump(exclude_unset=True)
     if not updates:
         raise HTTPException(status_code=400, detail="No fields provided to update.")
@@ -285,7 +317,13 @@ def update_watch(watch_id: int, watch: WatchUpdate):
             updated_watch = cur.fetchone()
             if not updated_watch:
                 raise HTTPException(status_code=404, detail="Watch not found.")
-            log_activity(cur, "UPDATE_WATCH", f"Updated watch ID {watch_id}", watch_id=watch_id)
+            log_activity(
+                cur,
+                "UPDATE_WATCH",
+                f"Updated watch ID {watch_id}",
+                user_id=admin_user["id"],
+                watch_id=watch_id
+            )
         conn.commit()
         return updated_watch
     except HTTPException:
@@ -300,21 +338,30 @@ def update_watch(watch_id: int, watch: WatchUpdate):
     finally:
         conn.close()
 
-# Protected Routes - Delete
-@app.delete("/api/v1/watches/{watch_id}", dependencies=[Depends(verify_api_key)])
-def delete_watch(watch_id: int):
+# Admin Routes - Delete
+@app.delete("/api/v1/watches/{watch_id}")
+def delete_watch(watch_id: int, admin_user: dict = Depends(verify_admin)):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            log_activity(cur, "DELETE_WATCH", f"Deleted watch ID {watch_id}", watch_id=watch_id)
-            cur.execute("DELETE FROM watches WHERE id = %s RETURNING id;", (watch_id,))
+            cur.execute(
+                "DELETE FROM watches WHERE id = %s RETURNING id, brand, model;",
+                (watch_id,)
+            )
             deleted = cur.fetchone()
             if not deleted:
-                conn.rollback()
                 raise HTTPException(status_code=404, detail="Watch not found.")
+            log_activity(
+                cur,
+                "DELETE_WATCH",
+                f"Deleted {deleted['brand']} {deleted['model']} (ID {watch_id})",
+                user_id=admin_user["id"],
+                watch_id=None
+            )
         conn.commit()
         return {"message": f"Watch {watch_id} deleted successfully."}
     except HTTPException:
+        conn.rollback()
         raise
     except psycopg2.Error:
         conn.rollback()
@@ -513,9 +560,12 @@ def upsert_watch_review(watch_id: int, review: ReviewCreate):
     finally:
         conn.close()
 
-# Protected Routes - Audit Logs (Multi-Table LEFT JOIN)
-@app.get("/api/v1/audit-logs", dependencies=[Depends(verify_api_key)])
-def get_audit_logs(limit: int = Query(default=30, ge=1, le=100)):
+# Admin Routes - Audit Logs (Multi-Table LEFT JOIN)
+@app.get("/api/v1/audit-logs")
+def get_audit_logs(
+    limit: int = Query(default=30, ge=1, le=100),
+    admin_user: dict = Depends(verify_admin)
+):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
