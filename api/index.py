@@ -58,7 +58,7 @@ class Watch(BaseModel):
     power_reserve_hours: int = Field(gt=0)
     water_resistance_m: int = Field(gt=0)
     year: int = Field(ge=1900, le=2026)
-    origin: Literal["Switzerland"]
+    origin: Literal["Switzerland", "Germany", "France", "United Kingdom", "Japan", "Italy"]
     category: Literal["Diver", "Chronograph", "Sports", "Dress", "Pilot", "Field", "GMT"]
     price_php: int = Field(gt=0)
     image: str = Field(min_length=1)
@@ -78,7 +78,7 @@ class WatchCreate(BaseModel):
     power_reserve_hours: int = Field(gt=0)
     water_resistance_m: int = Field(gt=0)
     year: int = Field(ge=1900, le=2026)
-    origin: Literal["Switzerland"]
+    origin: Literal["Switzerland", "Germany", "France", "United Kingdom", "Japan", "Italy"]
     category: Literal["Diver", "Chronograph", "Sports", "Dress", "Pilot", "Field", "GMT"]
     price_php: int = Field(gt=0)
     image: str = Field(min_length=1)
@@ -98,7 +98,7 @@ class WatchUpdate(BaseModel):
     power_reserve_hours: Optional[int] = Field(default=None, gt=0)
     water_resistance_m: Optional[int] = Field(default=None, gt=0)
     year: Optional[int] = Field(default=None, ge=1900, le=2026)
-    origin: Optional[Literal["Switzerland"]] = None
+    origin: Optional[Literal["Switzerland", "Germany", "France", "United Kingdom", "Japan", "Italy"]] = None
     category: Optional[Literal["Diver", "Chronograph", "Sports", "Dress", "Pilot", "Field", "GMT"]] = None
     price_php: Optional[int] = Field(default=None, gt=0)
     image: Optional[str] = Field(default=None, min_length=1)
@@ -554,6 +554,49 @@ def upsert_watch_review(watch_id: int, review: ReviewCreate):
     except psycopg2.IntegrityError:
         conn.rollback()
         raise HTTPException(status_code=404, detail="User or watch not found.")
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.delete("/api/v1/reviews/{review_id}", dependencies=[Depends(verify_api_key)])
+def delete_watch_review(
+    review_id: int,
+    x_user_id: Optional[int] = Header(default=None)
+):
+    if not x_user_id:
+        raise HTTPException(status_code=403, detail="Authentication required (missing x-user-id).")
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, username, role FROM users WHERE id = %s;", (x_user_id,))
+            requester = cur.fetchone()
+            if not requester:
+                raise HTTPException(status_code=403, detail="User not found.")
+
+            cur.execute("SELECT id, watch_id, user_id FROM watch_reviews WHERE id = %s;", (review_id,))
+            review = cur.fetchone()
+            if not review:
+                raise HTTPException(status_code=404, detail="Review not found.")
+
+            if requester["role"] != "admin" and review["user_id"] != requester["id"]:
+                raise HTTPException(status_code=403, detail="You can only delete your own reviews.")
+
+            cur.execute("DELETE FROM watch_reviews WHERE id = %s;", (review_id,))
+            log_activity(
+                cur,
+                "DELETE_REVIEW",
+                f"Deleted review ID {review_id} on watch ID {review['watch_id']}",
+                user_id=requester["id"],
+                watch_id=review["watch_id"]
+            )
+        conn.commit()
+        return {"message": f"Review {review_id} deleted successfully."}
+    except HTTPException:
+        conn.rollback()
+        raise
     except psycopg2.Error:
         conn.rollback()
         raise HTTPException(status_code=500, detail="Database operation failed.")

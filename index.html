@@ -80,6 +80,7 @@
                 <input type="text" id="searchInput" placeholder="Search by model, reference, movement...">
                 <button id="searchBtn" onclick="searchWatches()">SEARCH</button>
                 <button type="button" id="favoritesFilterBtn" class="fav-filter-btn" style="display: none;" onclick="toggleFavoritesFilter()">MY FAVORITES</button>
+                <button type="button" id="addWatchBtn" class="admin-add-btn" style="display: none;" onclick="openWatchFormModal()">+ ADD WATCH</button>
             </div>
 
             <!-- CATALOG GRID -->
@@ -103,6 +104,12 @@
                             <h3 class="modal-nickname" id="modalNickname">"Nickname"</h3>
                         </div>
                         <button type="button" id="modalFavBtn" class="modal-fav-btn" onclick="toggleWatchFavorite()" title="Save to Favorites" aria-label="Save to Favorites">&#9734;</button>
+                    </div>
+
+                    <!-- ADMIN ACTIONS BAR -->
+                    <div id="modalAdminActions" class="modal-admin-actions" style="display: none;">
+                        <button type="button" class="admin-edit-btn" onclick="openEditWatchModal()">EDIT WATCH</button>
+                        <button type="button" id="adminDeleteBtn" class="admin-delete-btn" onclick="handleDeleteWatch()">DELETE</button>
                     </div>
                     
                     <div class="modal-meta">
@@ -145,6 +152,145 @@
                         <div id="modalReviewsList" class="reviews-list"></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN ADD / EDIT WATCH MODAL -->
+    <div id="watchFormModal" class="modal-overlay" onclick="handleBackdropClick(event)">
+        <div class="modal-card form-modal-card">
+            <button class="modal-close" onclick="closeWatchFormModal()">&times;</button>
+            <div class="form-modal-body">
+                <p class="modal-brand">CATALOG MANAGEMENT</p>
+                <h2 class="modal-title" id="watchFormModalTitle">Add New Watch</h2>
+                <div class="modal-divider"></div>
+
+                <form id="watchCrudForm" class="watch-crud-form" onsubmit="submitWatchForm(event)">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="wfBrand">Brand</label>
+                            <select id="wfBrand" required>
+                                <option value="Rolex">Rolex</option>
+                                <option value="Omega">Omega</option>
+                                <option value="Audemars Piguet">Audemars Piguet</option>
+                                <option value="Patek Philippe">Patek Philippe</option>
+                                <option value="Richard Mille">Richard Mille</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfModel">Model</label>
+                            <input type="text" id="wfModel" placeholder="e.g. Submariner Date" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="wfNickname">Nickname</label>
+                            <input type="text" id="wfNickname" placeholder="e.g. Starbucks" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfReference">Reference Number</label>
+                            <input type="text" id="wfReference" placeholder="e.g. 126610LV" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="wfCaseMaterial">Case Material</label>
+                            <input type="text" id="wfCaseMaterial" placeholder="e.g. Oystersteel" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfCaseSize">Case Size (mm)</label>
+                            <input type="number" id="wfCaseSize" step="0.1" min="1" placeholder="e.g. 41" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfDialColor">Dial Color</label>
+                            <input type="text" id="wfDialColor" placeholder="e.g. Black" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="wfBezelMaterial">Bezel Material</label>
+                            <input type="text" id="wfBezelMaterial" placeholder="e.g. Green Cerachrom Ceramic" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfMovementType">Movement Type</label>
+                            <select id="wfMovementType" required>
+                                <option value="Automatic">Automatic</option>
+                                <option value="Manual-Wind">Manual-Wind</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="wfMovement">Calibre / Movement</label>
+                            <input type="text" id="wfMovement" placeholder="e.g. Calibre 3235" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfPowerReserve">Power Reserve (hrs)</label>
+                            <input type="number" id="wfPowerReserve" min="1" placeholder="e.g. 70" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfWaterResistance">Water Resistance (m)</label>
+                            <input type="number" id="wfWaterResistance" min="1" placeholder="e.g. 300" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="wfYear">Year (1900–2026)</label>
+                            <input type="number" id="wfYear" min="1900" max="2026" placeholder="e.g. 2023" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfCategory">Category</label>
+                            <select id="wfCategory" required>
+                                <option value="Diver">Diver</option>
+                                <option value="Chronograph">Chronograph</option>
+                                <option value="Sports">Sports</option>
+                                <option value="Dress">Dress</option>
+                                <option value="Pilot">Pilot</option>
+                                <option value="Field">Field</option>
+                                <option value="GMT">GMT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfOrigin">Origin</label>
+                            <select id="wfOrigin" required>
+                                <option value="Switzerland">Switzerland</option>
+                                <option value="Germany">Germany</option>
+                                <option value="France">France</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="Japan">Japan</option>
+                                <option value="Italy">Italy</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="wfPrice">Price (PHP)</label>
+                            <input type="number" id="wfPrice" min="1" placeholder="e.g. 920000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="wfImage">Image Path</label>
+                            <input type="text" id="wfImage" placeholder="e.g. images/starbucks.jpg" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wfDescription">Description</label>
+                        <textarea id="wfDescription" rows="3" placeholder="Brief horological overview..." required></textarea>
+                    </div>
+
+                    <p id="watchFormMessage" class="form-feedback-msg"></p>
+
+                    <div class="form-actions-row">
+                        <button type="button" class="form-cancel-btn" onclick="closeWatchFormModal()">CANCEL</button>
+                        <button type="submit" id="watchFormSubmitBtn" class="form-submit-btn">SAVE WATCH</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

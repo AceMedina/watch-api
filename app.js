@@ -17,6 +17,9 @@ if (roleBadge) {
 if (isAdmin) {
     const auditBtn = document.getElementById("auditLogNavBtn");
     if (auditBtn) auditBtn.style.display = "inline-block";
+
+    const addWatchBtn = document.getElementById("addWatchBtn");
+    if (addWatchBtn) addWatchBtn.style.display = "inline-block";
 }
 
 if (!isGuest) {
@@ -42,11 +45,26 @@ const jsonHeaders = {
     "x-api-key": API_KEY
 };
 
+function getAdminHeaders(includeJson = false) {
+    const headers = {
+        "x-api-key": API_KEY
+    };
+    if (currentUser && currentUser.id) {
+        headers["x-user-id"] = String(currentUser.id);
+    }
+    if (includeJson) {
+        headers["Content-Type"] = "application/json";
+    }
+    return headers;
+}
+
 let allWatches = [];
 let featuredWatches = [];
 let favoriteWatchIds = new Set();
 let showingFavoritesOnly = false;
 let activeModalWatch = null;
+let editingWatchId = null;
+let pendingDeleteConfirm = false;
 let currentHeroIndex = 0;
 let selectedBrand = "";
 let isHeroAnimating = false;
@@ -67,12 +85,12 @@ async function loadWatches() {
             await loadUserFavorites();
         }
 
-        displayWatches(allWatches);
+        refreshCurrentView();
         if (featuredWatches.length > 0) {
             updateHero(0);
         }
 
-        if (isGuest) {
+        if (isGuest && !document.querySelector(".guest-limit-banner")) {
             const catalogContainer = document.querySelector(".catalog-container");
             const notice = document.createElement("p");
             notice.className = "guest-limit-banner";
@@ -82,6 +100,16 @@ async function loadWatches() {
     } catch (error) {
         console.error(error);
         document.getElementById("watchGrid").innerHTML = "<p style='grid-column: 1/-1; text-align:center; color:#3D3D3D;'>Unable to connect to the Horology API.</p>";
+    }
+}
+
+function refreshCurrentView() {
+    if (showingFavoritesOnly) {
+        displayWatches(allWatches.filter(w => favoriteWatchIds.has(w.id)));
+    } else if (selectedBrand) {
+        displayWatches(allWatches.filter(w => w.brand.toLowerCase() === selectedBrand.toLowerCase()));
+    } else {
+        displayWatches(allWatches);
     }
 }
 
@@ -193,20 +221,13 @@ async function toggleWatchFavorite() {
         }
 
         updateModalFavoriteButton();
-
-        if (showingFavoritesOnly) {
-            displayWatches(allWatches.filter(w => favoriteWatchIds.has(w.id)));
-        } else if (selectedBrand) {
-            displayWatches(allWatches.filter(w => w.brand.toLowerCase() === selectedBrand.toLowerCase()));
-        } else {
-            displayWatches(allWatches);
-        }
+        refreshCurrentView();
     } catch (err) {
         console.error(err);
     }
 }
 
-// REVIEWS (1-5 STARS + SHORT COMMENT)
+// REVIEWS (1-5 STARS + SHORT COMMENT + DELETE OWN/ADMIN)
 async function loadWatchReviews(watchId) {
     const listEl = document.getElementById("modalReviewsList");
     const summaryEl = document.getElementById("modalRatingSummary");
@@ -228,12 +249,20 @@ async function loadWatchReviews(watchId) {
 
         data.reviews.forEach(rev => {
             const stars = "★".repeat(rev.rating) + "☆".repeat(5 - rev.rating);
+            const canDelete = isAdmin || (!isGuest && currentUser.id === rev.user_id);
+            const deleteBtnHtml = canDelete
+                ? `<button type="button" class="review-delete-btn" onclick="deleteWatchReview(${rev.id})" title="Delete Review">&times;</button>`
+                : "";
+
             const item = document.createElement("div");
             item.className = "review-item";
             item.innerHTML = `
                 <div class="review-item-top">
                     <span class="review-author">${rev.username}</span>
-                    <span class="review-stars">${stars}</span>
+                    <div class="review-item-right">
+                        <span class="review-stars">${stars}</span>
+                        ${deleteBtnHtml}
+                    </div>
                 </div>
                 <p class="review-text">${rev.comment}</p>
             `;
@@ -242,6 +271,26 @@ async function loadWatchReviews(watchId) {
     } catch (err) {
         summaryEl.textContent = "";
         listEl.innerHTML = "<p class='review-empty'>Unable to load reviews.</p>";
+    }
+}
+
+async function deleteWatchReview(reviewId) {
+    if (isGuest || !currentUser.id || !activeModalWatch) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/v1/reviews/${reviewId}`, {
+            method: "DELETE",
+            headers: getAdminHeaders(false)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || "Failed to delete review.");
+        }
+
+        await loadWatchReviews(activeModalWatch.id);
+    } catch (err) {
+        alert(err.message || "Unable to delete review.");
     }
 }
 
@@ -274,6 +323,161 @@ async function submitWatchReview(event) {
     }
 }
 
+// ADMIN CRUD: ADD, EDIT & DELETE WATCHES
+function openWatchFormModal(watchToEdit = null) {
+    if (!isAdmin) return;
+
+    const form = document.getElementById("watchCrudForm");
+    const titleEl = document.getElementById("watchFormModalTitle");
+    const submitBtn = document.getElementById("watchFormSubmitBtn");
+    const msgEl = document.getElementById("watchFormMessage");
+
+    form.reset();
+    msgEl.textContent = "";
+    msgEl.className = "form-feedback-msg";
+
+    if (watchToEdit) {
+        editingWatchId = watchToEdit.id;
+        titleEl.textContent = `Edit ${watchToEdit.brand} ${watchToEdit.model}`;
+        submitBtn.textContent = "UPDATE WATCH";
+
+        document.getElementById("wfBrand").value = watchToEdit.brand || "Rolex";
+        document.getElementById("wfModel").value = watchToEdit.model || "";
+        document.getElementById("wfNickname").value = watchToEdit.nickname || "";
+        document.getElementById("wfReference").value = watchToEdit.reference_number || "";
+        document.getElementById("wfCaseMaterial").value = watchToEdit.case_material || "";
+        document.getElementById("wfCaseSize").value = watchToEdit.case_size_mm || "";
+        document.getElementById("wfDialColor").value = watchToEdit.dial_color || "";
+        document.getElementById("wfBezelMaterial").value = watchToEdit.bezel_material || "";
+        document.getElementById("wfMovementType").value = watchToEdit.movement_type || "Automatic";
+        document.getElementById("wfMovement").value = watchToEdit.movement || "";
+        document.getElementById("wfPowerReserve").value = watchToEdit.power_reserve_hours || "";
+        document.getElementById("wfWaterResistance").value = watchToEdit.water_resistance_m || "";
+        document.getElementById("wfYear").value = watchToEdit.year || 2024;
+        document.getElementById("wfCategory").value = watchToEdit.category || "Sports";
+        document.getElementById("wfOrigin").value = watchToEdit.origin || "Switzerland";
+        document.getElementById("wfPrice").value = watchToEdit.price_php || "";
+        document.getElementById("wfImage").value = watchToEdit.image || "";
+        document.getElementById("wfDescription").value = watchToEdit.description || "";
+    } else {
+        editingWatchId = null;
+        titleEl.textContent = "Add New Timepiece";
+        submitBtn.textContent = "CREATE WATCH";
+    }
+
+    document.getElementById("watchFormModal").classList.add("open");
+}
+
+function openEditWatchModal() {
+    if (!isAdmin || !activeModalWatch) return;
+    const watchCopy = { ...activeModalWatch };
+    closeModal();
+    openWatchFormModal(watchCopy);
+}
+
+function closeWatchFormModal() {
+    document.getElementById("watchFormModal").classList.remove("open");
+    editingWatchId = null;
+}
+
+async function submitWatchForm(event) {
+    event.preventDefault();
+    if (!isAdmin) return;
+
+    const submitBtn = document.getElementById("watchFormSubmitBtn");
+    const msgEl = document.getElementById("watchFormMessage");
+
+    const payload = {
+        brand: document.getElementById("wfBrand").value,
+        model: document.getElementById("wfModel").value.trim(),
+        nickname: document.getElementById("wfNickname").value.trim(),
+        reference_number: document.getElementById("wfReference").value.trim(),
+        case_material: document.getElementById("wfCaseMaterial").value.trim(),
+        case_size_mm: parseFloat(document.getElementById("wfCaseSize").value),
+        dial_color: document.getElementById("wfDialColor").value.trim(),
+        bezel_material: document.getElementById("wfBezelMaterial").value.trim(),
+        movement_type: document.getElementById("wfMovementType").value,
+        movement: document.getElementById("wfMovement").value.trim(),
+        power_reserve_hours: parseInt(document.getElementById("wfPowerReserve").value, 10),
+        water_resistance_m: parseInt(document.getElementById("wfWaterResistance").value, 10),
+        year: parseInt(document.getElementById("wfYear").value, 10),
+        origin: document.getElementById("wfOrigin").value,
+        category: document.getElementById("wfCategory").value,
+        price_php: parseInt(document.getElementById("wfPrice").value, 10),
+        image: document.getElementById("wfImage").value.trim(),
+        description: document.getElementById("wfDescription").value.trim()
+    };
+
+    const isEditing = editingWatchId !== null;
+    const endpoint = isEditing
+        ? `${API_URL}/api/v1/watches/${editingWatchId}`
+        : `${API_URL}/api/v1/watches`;
+    const method = isEditing ? "PATCH" : "POST";
+
+    submitBtn.disabled = true;
+    msgEl.textContent = isEditing ? "Updating timepiece..." : "Saving timepiece...";
+    msgEl.className = "form-feedback-msg";
+
+    try {
+        const res = await fetch(endpoint, {
+            method: method,
+            headers: getAdminHeaders(true),
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.detail || "Failed to save watch.");
+        }
+
+        await loadWatches();
+        closeWatchFormModal();
+    } catch (err) {
+        msgEl.textContent = err.message || "Error saving watch.";
+        msgEl.className = "form-feedback-msg error";
+    } finally {
+        submitBtn.disabled = false;
+    }
+}
+
+async function handleDeleteWatch() {
+    if (!isAdmin || !activeModalWatch) return;
+
+    const delBtn = document.getElementById("adminDeleteBtn");
+    if (!pendingDeleteConfirm) {
+        pendingDeleteConfirm = true;
+        delBtn.textContent = "CONFIRM DELETE?";
+        delBtn.classList.add("confirming");
+        return;
+    }
+
+    const watchId = activeModalWatch.id;
+    delBtn.disabled = true;
+    delBtn.textContent = "DELETING...";
+
+    try {
+        const res = await fetch(`${API_URL}/api/v1/watches/${watchId}`, {
+            method: "DELETE",
+            headers: getAdminHeaders(false)
+        });
+
+        if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || "Failed to delete watch.");
+        }
+
+        favoriteWatchIds.delete(watchId);
+        closeModal();
+        await loadWatches();
+    } catch (err) {
+        alert(err.message || "Unable to delete timepiece.");
+        delBtn.disabled = false;
+        delBtn.textContent = "DELETE";
+        delBtn.classList.remove("confirming");
+        pendingDeleteConfirm = false;
+    }
+}
+
 // ADMIN AUDIT LOGS MODAL
 async function openAuditModal() {
     if (!isAdmin) return;
@@ -283,8 +487,15 @@ async function openAuditModal() {
     modal.classList.add("open");
 
     try {
-        const res = await fetch(`${API_URL}/api/v1/audit-logs?limit=30`, { headers: requestHeaders });
+        const res = await fetch(`${API_URL}/api/v1/audit-logs?limit=30`, {
+            headers: getAdminHeaders(false)
+        });
         const data = await res.json();
+
+        if (!res.ok) {
+            listEl.innerHTML = `<p class='review-empty'>${data.detail || "Unable to load activity logs."}</p>`;
+            return;
+        }
 
         if (!data.logs || data.logs.length === 0) {
             listEl.innerHTML = "<p class='review-empty'>No activity recorded yet.</p>";
@@ -458,6 +669,18 @@ function toggleBrandFilter(brandName, element) {
 // MODAL (Populates full technical details, favorite state & reviews)
 function openModal(watch) {
     activeModalWatch = watch;
+    pendingDeleteConfirm = false;
+
+    const adminActions = document.getElementById("modalAdminActions");
+    const delBtn = document.getElementById("adminDeleteBtn");
+    if (adminActions) {
+        adminActions.style.display = isAdmin ? "flex" : "none";
+    }
+    if (delBtn) {
+        delBtn.disabled = false;
+        delBtn.textContent = "DELETE";
+        delBtn.classList.remove("confirming");
+    }
 
     document.getElementById("modalBrand").innerText = watch.brand;
     document.getElementById("modalTitle").innerText = watch.model;
@@ -508,11 +731,15 @@ function openModal(watch) {
 function closeModal() {
     document.getElementById("detailModal").classList.remove("open");
     activeModalWatch = null;
+    pendingDeleteConfirm = false;
 }
 
 function handleBackdropClick(event) {
     if (event.target.id === "detailModal") {
         closeModal();
+    }
+    if (event.target.id === "watchFormModal") {
+        closeWatchFormModal();
     }
     if (event.target.id === "auditModal") {
         closeAuditModal();
