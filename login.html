@@ -9,44 +9,119 @@
 <body class="auth-body">
 
     <div class="auth-container">
-        <!-- LEFT PANEL (GREEN) -->
+        <!-- LEFT PANEL -->
         <div class="auth-left">
-            <p class="auth-welcome">Welcome!</p>
-            <h1 class="auth-brand">Watch Gallery</h1>
-            <div class="auth-divider"></div>
-            <p class="auth-tagline">Sign in to browse the collection.</p>
+            <!-- ARCHITECTURAL DIAL -->
+            <svg class="auth-dial-svg" viewBox="0 0 600 600" aria-hidden="true">
+                <circle cx="300" cy="300" r="270" fill="none" stroke="rgba(243, 239, 232, 0.12)" stroke-width="1"/>
+                <circle cx="300" cy="300" r="195" fill="none" stroke="rgba(243, 239, 232, 0.08)" stroke-width="1"/>
+                <circle cx="300" cy="300" r="120" fill="none" stroke="rgba(243, 239, 232, 0.06)" stroke-width="1"/>
+                <g id="dialTickMarks"></g>
+
+                <!-- SECOND HAND -->
+                <line x1="255" y1="322" x2="520" y2="190" stroke="#336659" stroke-width="1.5" stroke-linecap="round"/>
+
+                <!-- HOUR HAND (10) -->
+                <line x1="300" y1="300" x2="222" y2="206" stroke="#F3EFE8" stroke-width="6.5" stroke-linecap="round"/>
+
+                <!-- MINUTE HAND (2) -->
+                <line x1="300" y1="300" x2="396" y2="122" stroke="#F3EFE8" stroke-width="4" stroke-linecap="round"/>
+
+                <!-- CENTER PINION -->
+                <circle cx="300" cy="300" r="8" fill="#F3EFE8"/>
+                <circle cx="300" cy="300" r="3.5" fill="#1F493D"/>
+            </svg>
+
+            <div class="auth-left-top">
+                <h1 class="auth-brand">Watch Gallery</h1>
+                <div class="auth-divider"></div>
+            </div>
+
+            <div class="auth-left-bottom">
+                <p class="auth-tagline">Time, curated<br>with patience.</p>
+            </div>
         </div>
 
-        <!-- RIGHT PANEL (WHITE FORM) -->
+        <!-- RIGHT PANEL -->
         <div class="auth-right">
-            <h2 class="auth-form-title" id="authFormTitle">Sign In</h2>
-            <p class="auth-subtitle" id="authSubtitle">Enter your account details below.</p>
-
-            <form id="authForm" class="auth-form">
-                <div class="auth-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" placeholder="Enter your username" required minlength="3">
+            <div class="auth-card-wrap">
+                <!-- MODE TABS -->
+                <div class="auth-mode-tabs">
+                    <button type="button" id="tabSignInBtn" class="auth-tab active" onclick="if(isRegisterMode) switchModeBtn.click()">SIGN IN</button>
+                    <button type="button" id="tabRegisterBtn" class="auth-tab" onclick="if(!isRegisterMode) switchModeBtn.click()">REGISTER</button>
                 </div>
 
-                <div class="auth-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Enter your password" required minlength="4">
+                <h2 class="auth-form-title" id="authFormTitle">Welcome back</h2>
+                <p class="auth-subtitle" id="authSubtitle">Sign in to browse the full collection.</p>
+
+                <form id="authForm" class="auth-form">
+                    <div class="auth-group">
+                        <label for="username">USERNAME</label>
+                        <input type="text" id="username" required minlength="3" autocomplete="username">
+                    </div>
+
+                    <div class="auth-group">
+                        <label for="password">PASSWORD</label>
+                        <input type="password" id="password" required minlength="4" autocomplete="current-password">
+                    </div>
+
+                    <p id="authMessage" class="auth-message"></p>
+
+                    <button type="submit" id="authSubmitBtn" class="auth-btn">SIGN IN</button>
+                </form>
+
+                <div class="auth-or-divider">
+                    <span>OR</span>
                 </div>
 
-                <p id="authMessage" class="auth-message"></p>
+                <button type="button" id="guestLoginBtn" class="guest-btn">CONTINUE AS GUEST</button>
 
-                <button type="submit" id="authSubmitBtn" class="auth-btn">SIGN IN</button>
-            </form>
-
-            <button type="button" id="guestLoginBtn" class="guest-btn">CONTINUE AS GUEST</button>
-
-            <div class="auth-switch">
-                <span id="switchPrompt">Don't have an account?</span>
-                <button type="button" id="switchModeBtn" class="auth-link-btn">Create Account</button>
+                <div class="auth-switch">
+                    <span id="switchPrompt">Don't have an account?</span>
+                    <button type="button" id="switchModeBtn" class="auth-link-btn">Create Account</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="login.js"></script>
+    <script>
+        // Render 60 watch dial ticks (12 hour + 48 minute)
+        const tickGroup = document.getElementById("dialTickMarks");
+        if (tickGroup) {
+            for (let i = 0; i < 60; i++) {
+                const isHour = i % 5 === 0;
+                const angle = (i * 6) * (Math.PI / 180);
+                const innerR = isHour ? 246 : 258;
+                const outerR = 270;
+                const x1 = 300 + innerR * Math.cos(angle);
+                const y1 = 300 + innerR * Math.sin(angle);
+                const x2 = 300 + outerR * Math.cos(angle);
+                const y2 = 300 + outerR * Math.sin(angle);
+
+                const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                tick.setAttribute("x1", x1.toFixed(1));
+                tick.setAttribute("y1", y1.toFixed(1));
+                tick.setAttribute("x2", x2.toFixed(1));
+                tick.setAttribute("y2", y2.toFixed(1));
+                tick.setAttribute("stroke", isHour ? "rgba(243, 239, 232, 0.85)" : "rgba(243, 239, 232, 0.22)");
+                tick.setAttribute("stroke-width", isHour ? "2.4" : "1");
+                tickGroup.appendChild(tick);
+            }
+        }
+
+        // Sync top segmented tabs with login.js mode state
+        const tabSignIn = document.getElementById("tabSignInBtn");
+        const tabRegister = document.getElementById("tabRegisterBtn");
+        const observer = new MutationObserver(() => {
+            tabSignIn.classList.toggle("active", !isRegisterMode);
+            tabRegister.classList.toggle("active", isRegisterMode);
+            if (!isRegisterMode && authFormTitle.textContent === "Sign In") {
+                authFormTitle.textContent = "Welcome back";
+                authSubtitle.textContent = "Sign in to browse the full collection.";
+            }
+        });
+        observer.observe(authFormTitle, { childList: true });
+    </script>
 </body>
 </html>

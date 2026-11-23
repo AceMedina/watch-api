@@ -1,4 +1,4 @@
-// Route Guard, Role Check & Logout
+// Route guard and role check
 const rawUser = localStorage.getItem("watch_user");
 if (!rawUser) {
     window.location.href = "login.html";
@@ -23,6 +23,9 @@ if (isAdmin) {
 }
 
 if (!isGuest) {
+    const toolbarActions = document.getElementById("toolbarActions");
+    if (toolbarActions) toolbarActions.style.display = "flex";
+
     const favFilterBtn = document.getElementById("favoritesFilterBtn");
     if (favFilterBtn) favFilterBtn.style.display = "inline-block";
 }
@@ -33,9 +36,8 @@ function logoutUser() {
 }
 
 const API_URL = "https://watch-api-eight.vercel.app";
-
-// Include API Key header if using the protected /api/v1/ routes
 const API_KEY = "watch-api-001";
+
 const requestHeaders = {
     "x-api-key": API_KEY
 };
@@ -69,7 +71,7 @@ let currentHeroIndex = 0;
 let selectedBrand = "";
 let isHeroAnimating = false;
 
-// FETCH WATCHES & USER FAVORITES
+// Fetch watches and favorites
 async function loadWatches() {
     try {
         let response = await fetch(`${API_URL}/watches`);
@@ -125,7 +127,7 @@ async function loadUserFavorites() {
     }
 }
 
-// RENDER GRID
+// Render watch grid
 function displayWatches(watches) {
     const grid = document.getElementById("watchGrid");
     grid.innerHTML = "";
@@ -146,11 +148,12 @@ function displayWatches(watches) {
         card.innerHTML = `
             <div class="card-top">
                 ${favTag}
-                <img src="${watch.image}" alt="${watch.model}" onerror="this.src='https://placehold.co/300x300/336659/FDFDFD?text=${encodeURIComponent(watch.brand)}'">
+                <img src="${watch.image}" alt="${watch.model}" onerror="this.src='https://placehold.co/300x300/F3EFE8/1F493D?text=${encodeURIComponent(watch.brand)}'">
             </div>
             <div class="card-bottom">
                 <p class="card-brand">${watch.brand}</p>
-                <h4 class="card-title">${watch.model} "${watch.nickname}"</h4>
+                <h4 class="card-title">${watch.model}</h4>
+                <p class="card-nickname">"${watch.nickname}"</p>
             </div>
         `;
 
@@ -158,12 +161,12 @@ function displayWatches(watches) {
     });
 }
 
-// FAVORITES FILTER & TOGGLE
+// Favorites filter and toggle
 function toggleFavoritesFilter() {
     const btn = document.getElementById("favoritesFilterBtn");
     showingFavoritesOnly = !showingFavoritesOnly;
 
-    document.querySelectorAll(".brand-circle").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".brand-tab").forEach(b => b.classList.remove("active"));
     document.getElementById("searchInput").value = "";
     selectedBrand = "";
 
@@ -227,7 +230,7 @@ async function toggleWatchFavorite() {
     }
 }
 
-// REVIEWS (1-5 STARS + SHORT COMMENT + DELETE OWN/ADMIN)
+// Reviews and moderation
 async function loadWatchReviews(watchId) {
     const listEl = document.getElementById("modalReviewsList");
     const summaryEl = document.getElementById("modalRatingSummary");
@@ -251,18 +254,18 @@ async function loadWatchReviews(watchId) {
             const stars = "★".repeat(rev.rating) + "☆".repeat(5 - rev.rating);
             const canDelete = isAdmin || (!isGuest && currentUser.id === rev.user_id);
             const deleteBtnHtml = canDelete
-                ? `<button type="button" class="review-delete-btn" onclick="deleteWatchReview(${rev.id})" title="Delete Review">&times;</button>`
+                ? `<button type="button" class="review-delete-btn" onclick="deleteWatchReview(${rev.id})" title="Delete Review">DELETE</button>`
                 : "";
 
             const item = document.createElement("div");
             item.className = "review-item";
             item.innerHTML = `
                 <div class="review-item-top">
-                    <span class="review-author">${rev.username}</span>
-                    <div class="review-item-right">
+                    <div class="review-item-left">
+                        <span class="review-author">${rev.username}</span>
                         <span class="review-stars">${stars}</span>
-                        ${deleteBtnHtml}
                     </div>
+                    ${deleteBtnHtml}
                 </div>
                 <p class="review-text">${rev.comment}</p>
             `;
@@ -323,7 +326,7 @@ async function submitWatchReview(event) {
     }
 }
 
-// ADMIN CRUD: ADD, EDIT & DELETE WATCHES
+// Admin watch CRUD
 function openWatchFormModal(watchToEdit = null) {
     if (!isAdmin) return;
 
@@ -361,7 +364,7 @@ function openWatchFormModal(watchToEdit = null) {
         document.getElementById("wfDescription").value = watchToEdit.description || "";
     } else {
         editingWatchId = null;
-        titleEl.textContent = "Add New Timepiece";
+        titleEl.textContent = "Add New Watch";
         submitBtn.textContent = "CREATE WATCH";
     }
 
@@ -478,7 +481,7 @@ async function handleDeleteWatch() {
     }
 }
 
-// ADMIN AUDIT LOGS MODAL
+// Admin audit logs
 async function openAuditModal() {
     if (!isAdmin) return;
     const modal = document.getElementById("auditModal");
@@ -526,22 +529,24 @@ function closeAuditModal() {
     document.getElementById("auditModal").classList.remove("open");
 }
 
-// HERO UPDATE
+// Hero update
 function updateHero(index) {
     if (!featuredWatches || featuredWatches.length === 0) return;
     currentHeroIndex = index;
     const watch = featuredWatches[currentHeroIndex];
 
     document.getElementById("heroBrand").innerText = watch.brand.toUpperCase();
-    document.getElementById("heroTitle").innerText = `${watch.model} "${watch.nickname}"`;
+    document.getElementById("heroTitle").innerText = watch.model;
+    const heroNicknameEl = document.getElementById("heroNickname");
+    if (heroNicknameEl) heroNicknameEl.innerText = `"${watch.nickname}"`;
     document.getElementById("heroDesc").innerText = watch.description;
-    document.getElementById("heroRef").innerText = `Ref. ${watch.reference_number}`;
-    document.getElementById("heroMaterial").innerText = watch.case_material;
+    document.getElementById("heroRef").innerText = `REF. ${watch.reference_number.toUpperCase()}`;
+    document.getElementById("heroMaterial").innerText = watch.case_material.toUpperCase();
 
     const heroImg = document.getElementById("heroImage");
     heroImg.src = watch.image;
     heroImg.onerror = () => {
-        heroImg.src = `https://placehold.co/500x500/1F493D/F3EFE8?text=${encodeURIComponent(watch.model)}`;
+        heroImg.src = `https://placehold.co/500x500/336659/F3EFE8?text=${encodeURIComponent(watch.model)}`;
     };
 
     const heroPagination = document.getElementById("heroPagination");
@@ -552,7 +557,7 @@ function updateHero(index) {
     }
 }
 
-// DEPTH ZOOM TRANSITION
+// Depth zoom transition
 function transitionHero(nextIndex, direction = "next") {
     if (isHeroAnimating || !featuredWatches || featuredWatches.length === 0) return;
     isHeroAnimating = true;
@@ -586,7 +591,7 @@ function transitionHero(nextIndex, direction = "next") {
     }, 280);
 }
 
-// HERO NAVIGATION
+// Hero navigation
 function prevHeroWatch() {
     if (featuredWatches.length === 0) return;
     const prevIndex = (currentHeroIndex - 1 + featuredWatches.length) % featuredWatches.length;
@@ -599,11 +604,11 @@ function nextHeroWatch() {
     transitionHero(nextIndex, "next");
 }
 
-// SEARCH
+// Search watches
 async function searchWatches() {
     const query = document.getElementById("searchInput").value.trim();
     
-    document.querySelectorAll(".brand-circle").forEach(btn => btn.classList.remove("active"));
+    document.querySelectorAll(".brand-tab").forEach(btn => btn.classList.remove("active"));
     const favBtn = document.getElementById("favoritesFilterBtn");
     if (favBtn) favBtn.classList.remove("active");
     showingFavoritesOnly = false;
@@ -645,11 +650,11 @@ async function searchWatches() {
     }
 }
 
-// BRAND FILTER
+// Brand filter tabs
 function toggleBrandFilter(brandName, element) {
     const isAlreadySelected = element.classList.contains("active");
 
-    document.querySelectorAll(".brand-circle").forEach(btn => btn.classList.remove("active"));
+    document.querySelectorAll(".brand-tab").forEach(btn => btn.classList.remove("active"));
     const favBtn = document.getElementById("favoritesFilterBtn");
     if (favBtn) favBtn.classList.remove("active");
     showingFavoritesOnly = false;
@@ -666,7 +671,7 @@ function toggleBrandFilter(brandName, element) {
     }
 }
 
-// MODAL (Populates full technical details, favorite state & reviews)
+// Detail modal
 function openModal(watch) {
     activeModalWatch = watch;
     pendingDeleteConfirm = false;
@@ -694,13 +699,13 @@ function openModal(watch) {
     document.getElementById("modalDial").innerText = watch.dial_color || "N/A";
     document.getElementById("modalMovement").innerText = watch.movement || "N/A";
 
-    const powerVal = watch.power_reserve_hours ? `${watch.power_reserve_hours} Hours` : (watch.power_reserve || "N/A");
+    const powerVal = watch.power_reserve_hours ? `${watch.power_reserve_hours} hours` : (watch.power_reserve || "N/A");
     document.getElementById("modalPower").innerText = powerVal;
 
     const wrVal = watch.water_resistance_m ? `${watch.water_resistance_m} m` : (watch.water_resistance || "N/A");
     document.getElementById("modalWR").innerText = wrVal;
 
-    const catYear = `${watch.category || "Luxury"} (${watch.year || "Classic"})`;
+    const catYear = `${watch.category || "Luxury"} / ${watch.year || "Classic"}`;
     document.getElementById("modalCatYear").innerText = catYear;
 
     const priceFormatted = watch.price_php ? `₱${watch.price_php.toLocaleString()}` : "Price upon request";
@@ -709,7 +714,7 @@ function openModal(watch) {
     const modalImg = document.getElementById("modalImage");
     modalImg.src = watch.image;
     modalImg.onerror = () => {
-        modalImg.src = `https://placehold.co/400x400/336659/FDFDFD?text=${encodeURIComponent(watch.model)}`;
+        modalImg.src = `https://placehold.co/400x400/336659/F3EFE8?text=${encodeURIComponent(watch.model)}`;
     };
 
     const reviewForm = document.getElementById("reviewForm");
@@ -746,7 +751,7 @@ function handleBackdropClick(event) {
     }
 }
 
-// PARALLAX & SPOTLIGHT
+// Parallax and spotlight
 const heroSection = document.getElementById("hero");
 if (heroSection) {
     heroSection.addEventListener("mousemove", (e) => {
@@ -778,7 +783,7 @@ if (heroSection) {
     });
 }
 
-// EVENTS
+// Keyboard search trigger
 document.getElementById("searchInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") searchWatches();
 });

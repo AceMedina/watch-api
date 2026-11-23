@@ -13,36 +13,46 @@
         <div class="nav-container">
             <a href="#hero" class="brand-logo">Watch Gallery</a>
             <nav class="nav-links">
-                <a href="#hero">Home</a>
-                <a href="#collections">Collections</a>
-                <button type="button" id="auditLogNavBtn" class="nav-link-btn" style="display: none;" onclick="openAuditModal()">Activity Logs</button>
+                <a href="#hero" class="nav-link active">HOME</a>
+                <a href="#collections" class="nav-link">COLLECTIONS</a>
+                <button type="button" id="auditLogNavBtn" class="nav-audit-btn" style="display: none;" onclick="openAuditModal()">ACTIVITY LOGS</button>
                 <span id="userRoleBadge" class="nav-role-badge"></span>
-                <button type="button" class="nav-logout-btn" onclick="logoutUser()">Log Out</button>
+                <button type="button" class="nav-logout-btn" onclick="logoutUser()">LOG OUT</button>
             </nav>
         </div>
     </header>
 
     <!-- HERO SECTION -->
     <section id="hero" class="hero-section">
-        <button class="hero-nav-btn prev-btn" onclick="prevHeroWatch()" aria-label="Previous Watch">&#10094;</button>
-        <button class="hero-nav-btn next-btn" onclick="nextHeroWatch()" aria-label="Next Watch">&#10095;</button>
-
         <div class="hero-container">
             <div class="hero-content">
-                <p class="hero-eyebrow" id="heroBrand">ROLEX</p>
-                <h1 class="hero-title" id="heroTitle">GMT-Master II "Pepsi"</h1>
-                <p class="hero-desc" id="heroDesc">An iconic dual-time pilot watch featuring a bidirectional red and blue Cerachrom ceramic bezel.</p>
-                <div class="hero-pills" id="heroPills">
-                    <span class="pill" id="heroRef">Ref. 126710BLRO</span>
-                    <span class="pill" id="heroMaterial">Oystersteel</span>
+                <div class="hero-eyebrow-row">
+                    <span class="hero-eyebrow-line"></span>
+                    <p class="hero-eyebrow" id="heroBrand">ROLEX</p>
                 </div>
-                <!-- Description Accent Line -->
-                <div class="hero-desc-line"></div>
+                <h1 class="hero-title" id="heroTitle">GMT-Master II</h1>
+                <p class="hero-nickname" id="heroNickname">"Pepsi"</p>
+                <p class="hero-desc" id="heroDesc">An iconic dual-time pilot watch featuring a bidirectional red and blue Cerachrom ceramic bezel.</p>
+                
+                <div class="hero-pills" id="heroPills">
+                    <span class="pill" id="heroRef">REF. 126710BLRO</span>
+                    <span class="pill" id="heroMaterial">OYSTERSTEEL</span>
+                </div>
+
+                <!-- HERO CONTROLS & FOLIO -->
+                <div class="hero-controls-row">
+                    <button type="button" class="hero-circle-btn prev-btn" onclick="prevHeroWatch()" aria-label="Previous Watch">&larr;</button>
+                    <button type="button" class="hero-circle-btn next-btn" onclick="nextHeroWatch()" aria-label="Next Watch">&rarr;</button>
+                    <div class="hero-pagination" id="heroPagination">N° 01 / 05</div>
+                </div>
             </div>
+
             <div class="hero-visual">
-                <img id="heroImage" src="images/pepsi.jpg" alt="Featured Watch" onerror="this.src='https://placehold.co/500x500/1F493D/F3EFE8?text=Featured+Watch'">
-                <!-- Numbering Folio Below Watch -->
-                <div class="hero-pagination" id="heroPagination">N° 01 / 05</div>
+                <div class="hero-frame">
+                    <div class="hero-frame-inner">
+                        <img id="heroImage" src="images/pepsi.jpg" alt="Featured Watch" onerror="this.src='https://placehold.co/500x500/336659/F3EFE8?text=Featured+Watch'">
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -50,37 +60,42 @@
     <!-- CATALOG SECTION -->
     <section id="collections" class="catalog-section">
         <div class="catalog-container">
-            
-            <!-- BRAND QUICK-SELECT -->
-            <div class="brand-filter-row">
-                <button class="brand-circle" onclick="toggleBrandFilter('Rolex', this)" title="Rolex">
-                    <img src="images/rolex.jpg" alt="Rolex" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <span class="brand-fallback-text">Rolex</span>
+            <h2 class="section-heading">Collections</h2>
+
+            <!-- BRAND INDEX BAR -->
+            <div class="brand-index-bar" role="tablist" aria-label="Filter by Brand">
+                <button type="button" class="brand-tab" onclick="toggleBrandFilter('Rolex', this)">
+                    <span class="brand-tab-name">Rolex</span>
+                    <span class="brand-tab-num">01</span>
                 </button>
-                <button class="brand-circle" onclick="toggleBrandFilter('Omega', this)" title="Omega">
-                    <img src="images/omega.jpg" alt="Omega" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <span class="brand-fallback-text">Omega</span>
+                <button type="button" class="brand-tab" onclick="toggleBrandFilter('Omega', this)">
+                    <span class="brand-tab-name">Omega</span>
+                    <span class="brand-tab-num">02</span>
                 </button>
-                <button class="brand-circle" onclick="toggleBrandFilter('Audemars Piguet', this)" title="Audemars Piguet">
-                    <img src="images/ap.jpg" alt="Audemars Piguet" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <span class="brand-fallback-text">AP</span>
+                <button type="button" class="brand-tab" onclick="toggleBrandFilter('Audemars Piguet', this)">
+                    <span class="brand-tab-name">Audemars Piguet</span>
+                    <span class="brand-tab-num">03</span>
                 </button>
-                <button class="brand-circle" onclick="toggleBrandFilter('Patek Philippe', this)" title="Patek Philippe">
-                    <img src="images/patek.jpg" alt="Patek Philippe" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <span class="brand-fallback-text">Patek</span>
+                <button type="button" class="brand-tab" onclick="toggleBrandFilter('Patek Philippe', this)">
+                    <span class="brand-tab-name">Patek Philippe</span>
+                    <span class="brand-tab-num">04</span>
                 </button>
-                <button class="brand-circle" onclick="toggleBrandFilter('Richard Mille', this)" title="Richard Mille">
-                    <img src="images/rm.jpg" alt="Richard Mille" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <span class="brand-fallback-text">RM</span>
+                <button type="button" class="brand-tab" onclick="toggleBrandFilter('Richard Mille', this)">
+                    <span class="brand-tab-name">Richard Mille</span>
+                    <span class="brand-tab-num">05</span>
                 </button>
             </div>
 
-            <!-- SEARCH BAR -->
-            <div class="search-bar-wrap">
-                <input type="text" id="searchInput" placeholder="Search by model, reference, movement...">
-                <button id="searchBtn" onclick="searchWatches()">SEARCH</button>
-                <button type="button" id="favoritesFilterBtn" class="fav-filter-btn" style="display: none;" onclick="toggleFavoritesFilter()">MY FAVORITES</button>
-                <button type="button" id="addWatchBtn" class="admin-add-btn" style="display: none;" onclick="openWatchFormModal()">+ ADD WATCH</button>
+            <!-- SEARCH & ACTION TOOLBAR -->
+            <div class="toolbar-row">
+                <div class="search-group">
+                    <input type="text" id="searchInput" placeholder="Search model, reference, movement">
+                    <button type="button" id="searchBtn" onclick="searchWatches()">SEARCH</button>
+                </div>
+                <div class="action-group" id="toolbarActions" style="display: none;">
+                    <button type="button" id="favoritesFilterBtn" class="fav-filter-btn" style="display: none;" onclick="toggleFavoritesFilter()">&#9733; MY FAVORITES</button>
+                    <button type="button" id="addWatchBtn" class="admin-add-btn" style="display: none;" onclick="openWatchFormModal()">+ ADD WATCH</button>
+                </div>
             </div>
 
             <!-- CATALOG GRID -->
@@ -91,10 +106,12 @@
     <!-- WATCH DETAIL MODAL -->
     <div id="detailModal" class="modal-overlay" onclick="handleBackdropClick(event)">
         <div class="modal-card">
-            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
             <div class="modal-body">
                 <div class="modal-image-col">
-                    <img id="modalImage" src="" alt="Watch Detail">
+                    <div class="modal-image-frame">
+                        <img id="modalImage" src="" alt="Watch Detail">
+                    </div>
                 </div>
                 <div class="modal-info-col">
                     <div class="modal-header-row">
@@ -106,25 +123,55 @@
                         <button type="button" id="modalFavBtn" class="modal-fav-btn" onclick="toggleWatchFavorite()" title="Save to Favorites" aria-label="Save to Favorites">&#9734;</button>
                     </div>
 
-                    <!-- ADMIN ACTIONS BAR -->
-                    <div id="modalAdminActions" class="modal-admin-actions" style="display: none;">
-                        <button type="button" class="admin-edit-btn" onclick="openEditWatchModal()">EDIT WATCH</button>
-                        <button type="button" id="adminDeleteBtn" class="admin-delete-btn" onclick="handleDeleteWatch()">DELETE</button>
+                    <!-- ADMIN STRIP -->
+                    <div id="modalAdminActions" class="modal-admin-bar" style="display: none;">
+                        <span class="admin-bar-label">ADMIN</span>
+                        <div class="admin-bar-btns">
+                            <button type="button" class="admin-edit-btn" onclick="openEditWatchModal()">EDIT WATCH</button>
+                            <button type="button" id="adminDeleteBtn" class="admin-delete-btn" onclick="handleDeleteWatch()">DELETE</button>
+                        </div>
                     </div>
                     
-                    <div class="modal-meta">
-                        <p><strong>Reference Number:</strong> <span id="modalRef"></span></p>
-                        <p><strong>Case Material:</strong> <span id="modalMaterial"></span></p>
-                        <p><strong>Case Size:</strong> <span id="modalSize"></span></p>
-                        <p><strong>Dial:</strong> <span id="modalDial"></span></p>
-                        <p><strong>Movement:</strong> <span id="modalMovement"></span></p>
-                        <p><strong>Power Reserve:</strong> <span id="modalPower"></span></p>
-                        <p><strong>Water Resistance:</strong> <span id="modalWR"></span></p>
-                        <p><strong>Category / Year:</strong> <span id="modalCatYear"></span></p>
-                        <p><strong>Price:</strong> <span id="modalPrice"></span></p>
+                    <!-- 3X3 SPEC PLAQUES -->
+                    <div class="modal-spec-grid">
+                        <div class="spec-plaque">
+                            <span class="spec-label">REFERENCE</span>
+                            <span class="spec-value" id="modalRef"></span>
+                        </div>
+                        <div class="spec-plaque">
+                            <span class="spec-label">CASE MATERIAL</span>
+                            <span class="spec-value" id="modalMaterial"></span>
+                        </div>
+                        <div class="spec-plaque">
+                            <span class="spec-label">CASE SIZE</span>
+                            <span class="spec-value" id="modalSize"></span>
+                        </div>
+                        <div class="spec-plaque">
+                            <span class="spec-label">DIAL COLOR</span>
+                            <span class="spec-value" id="modalDial"></span>
+                        </div>
+                        <div class="spec-plaque">
+                            <span class="spec-label">MOVEMENT</span>
+                            <span class="spec-value" id="modalMovement"></span>
+                        </div>
+                        <div class="spec-plaque">
+                            <span class="spec-label">POWER RESERVE</span>
+                            <span class="spec-value" id="modalPower"></span>
+                        </div>
+                        <div class="spec-plaque">
+                            <span class="spec-label">WATER RESISTANCE</span>
+                            <span class="spec-value" id="modalWR"></span>
+                        </div>
+                        <div class="spec-plaque">
+                            <span class="spec-label">CATEGORY / YEAR</span>
+                            <span class="spec-value" id="modalCatYear"></span>
+                        </div>
+                        <div class="spec-plaque">
+                            <span class="spec-label">PRICE (PHP)</span>
+                            <span class="spec-value" id="modalPrice"></span>
+                        </div>
                     </div>
 
-                    <div class="modal-divider"></div>
                     <p class="modal-description" id="modalDescription"></p>
 
                     <div class="modal-divider"></div>
@@ -138,13 +185,13 @@
 
                         <form id="reviewForm" class="review-form" onsubmit="submitWatchReview(event)">
                             <select id="reviewRating" aria-label="Star Rating">
-                                <option value="5">★★★★★ (5)</option>
-                                <option value="4">★★★★☆ (4)</option>
-                                <option value="3">★★★☆☆ (3)</option>
-                                <option value="2">★★☆☆☆ (2)</option>
-                                <option value="1">★☆☆☆☆ (1)</option>
+                                <option value="5">&#9733;&#9733;&#9733;&#9733;&#9733;</option>
+                                <option value="4">&#9733;&#9733;&#9733;&#9733;&#9734;</option>
+                                <option value="3">&#9733;&#9733;&#9733;&#9734;&#9734;</option>
+                                <option value="2">&#9733;&#9733;&#9734;&#9734;&#9734;</option>
+                                <option value="1">&#9733;&#9734;&#9734;&#9734;&#9734;</option>
                             </select>
-                            <input type="text" id="reviewComment" placeholder="Write a short comment..." maxlength="300" required>
+                            <input type="text" id="reviewComment" placeholder="Share a short comment" maxlength="300" required>
                             <button type="submit">POST</button>
                         </form>
                         <p id="reviewGuestHint" class="review-guest-hint" style="display: none;">Sign in with an account to rate and review.</p>
@@ -159,7 +206,7 @@
     <!-- ADMIN ADD / EDIT WATCH MODAL -->
     <div id="watchFormModal" class="modal-overlay" onclick="handleBackdropClick(event)">
         <div class="modal-card form-modal-card">
-            <button class="modal-close" onclick="closeWatchFormModal()">&times;</button>
+            <button type="button" class="modal-close" onclick="closeWatchFormModal()">&times;</button>
             <div class="form-modal-body">
                 <p class="modal-brand">CATALOG MANAGEMENT</p>
                 <h2 class="modal-title" id="watchFormModalTitle">Add New Watch</h2>
@@ -298,7 +345,7 @@
     <!-- ADMIN AUDIT LOGS MODAL -->
     <div id="auditModal" class="modal-overlay" onclick="handleBackdropClick(event)">
         <div class="modal-card audit-modal-card">
-            <button class="modal-close" onclick="closeAuditModal()">&times;</button>
+            <button type="button" class="modal-close" onclick="closeAuditModal()">&times;</button>
             <div class="audit-modal-body">
                 <p class="modal-brand">ADMINISTRATION</p>
                 <h2 class="modal-title">Activity & Audit Logs</h2>
