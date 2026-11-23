@@ -672,13 +672,12 @@ def calculate_chronicle_points(
     unused = max(0, max_guesses - guesses_used)
     points = cfg["base"] + (unused * cfg["per_unused"])
 
-    # Daily Challenge boost (+25 pts)
+    # Daily Challenge boost (+25 pts) & Daily-only consecutive calendar day streak boost (+5 pts per streak starting at 2 wins, max +50 pts)
+    streak_bonus = 0
     if game_mode == "daily":
         points += 25
-
-    # Consecutive win streak boost (+5 pts per streak starting at 2 wins, max +50 pts)
-    streak_bonus = min(50, max(0, (new_streak - 1) * 5))
-    points += streak_bonus
+        streak_bonus = min(50, max(0, (new_streak - 1) * 5))
+        points += streak_bonus
 
     return points, max_guesses, streak_bonus
 
@@ -778,6 +777,7 @@ def get_chronicle_daily(user_id: Optional[int] = Query(default=None)):
 @app.post("/api/v1/chronicle/games", status_code=201, dependencies=[Depends(verify_api_key)])
 def record_chronicle_game(game: ChronicleGameCreate):
     today = get_manila_today()
+    yesterday = today - timedelta(days=1)
     effective_date = today if game.game_mode == "daily" else None
 
     conn = get_db_connection()
@@ -794,20 +794,28 @@ def record_chronicle_game(game: ChronicleGameCreate):
                 if cur.fetchone():
                     raise HTTPException(status_code=409, detail="You already completed today's daily puzzle.")
 
-            # Fetch latest game to compute consecutive win streak
-            cur.execute(
-                """
-                SELECT won, streak_count
-                FROM chronicle_games
-                WHERE user_id = %s
-                ORDER BY id DESC
-                LIMIT 1;
-                """,
-                (game.user_id,)
-            )
-            last_game = cur.fetchone()
-            prev_streak = last_game["streak_count"] if (last_game and last_game["won"]) else 0
-            new_streak = (prev_streak + 1) if game.won else 0
+                # Compute strict consecutive Manila calendar-day Daily streak
+                if game.won:
+                    cur.execute(
+                        """
+                        SELECT won, streak_count, COALESCE(puzzle_date, (played_at AT TIME ZONE 'Asia/Manila')::date) AS play_date
+                        FROM chronicle_games
+                        WHERE user_id = %s AND game_mode = 'daily'
+                        ORDER BY id DESC
+                        LIMIT 1;
+                        """,
+                        (game.user_id,)
+                    )
+                    last_daily = cur.fetchone()
+                    if last_daily and last_daily["won"] and last_daily["play_date"] == yesterday:
+                        new_streak = (last_daily["streak_count"] or 0) + 1
+                    else:
+                        new_streak = 1
+                else:
+                    new_streak = 0
+            else:
+                # Classic ("practice") rounds do not affect or earn Daily streaks
+                new_streak = 0
 
             points_earned, max_guesses, streak_bonus = calculate_chronicle_points(
                 game.difficulty,
@@ -864,6 +872,8 @@ def get_chronicle_history(
     user_id: int,
     limit: int = Query(default=25, ge=1, le=100)
 ):
+    today = get_manila_today()
+    yesterday = today - timedelta(days=1)
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
@@ -887,7 +897,7 @@ def get_chronicle_history(
                 SELECT COUNT(*) AS total_games,
                        COALESCE(SUM(CASE WHEN won THEN 1 ELSE 0 END), 0) AS wins,
                        COALESCE(SUM(points_earned), 0) AS total_points,
-                       COALESCE(MAX(streak_count), 0) AS best_streak,
+                       COALESCE(MAX(CASE WHEN game_mode = 'daily' THEN streak_count ELSE 0 END), 0) AS best_streak,
                        ROUND(AVG(CASE WHEN won THEN guesses_used END), 1) AS avg_guesses
                 FROM chronicle_games
                 WHERE user_id = %s;
@@ -895,7 +905,27 @@ def get_chronicle_history(
                 (user_id,)
             )
             stats = cur.fetchone()
-            stats["current_streak"] = games[0]["streak_count"] if games else 0
+
+            cur.execute(
+                """
+                SELECT won, streak_count, COALESCE(puzzle_date, (played_at AT TIME ZONE 'Asia/Manila')::date) AS play_date
+                FROM chronicle_games
+                WHERE user_id = %s AND game_mode = 'daily'
+                ORDER BY id DESC
+                LIMIT 1;
+                """,
+                (user_id,)
+            )
+            latest_daily = cur.fetchone()
+            if (
+                latest_daily
+                and latest_daily["won"]
+                and latest_daily["play_date"] in (today, yesterday)
+            ):
+                stats["current_streak"] = latest_daily["streak_count"]
+            else:
+                stats["current_streak"] = 0
+
         return {"stats": stats, "history": games}
     except psycopg2.Error:
         raise HTTPException(status_code=500, detail="Database operation failed.")
@@ -950,7 +980,7 @@ def get_chronicle_leaderboard(
                            COALESCE(SUM(g.points_earned), 0) AS total_points,
                            COUNT(g.id) AS games_played,
                            COALESCE(SUM(CASE WHEN g.won THEN 1 ELSE 0 END), 0) AS wins,
-                           COALESCE(MAX(g.streak_count), 0) AS best_streak,
+                           COALESCE(MAX(CASE WHEN g.game_mode = 'daily' THEN g.streak_count ELSE 0 END), 0) AS best_streak,
                            ROUND(
                                COALESCE(SUM(CASE WHEN g.won THEN 1 ELSE 0 END), 0)::numeric
                                / NULLIF(COUNT(g.id), 0) * 100, 1
