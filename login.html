@@ -57,12 +57,12 @@
                 <form id="authForm" class="auth-form">
                     <div class="auth-group">
                         <label for="username">USERNAME</label>
-                        <input type="text" id="username" required minlength="3" autocomplete="username">
+                        <input type="text" id="username" required minlength="3" maxlength="20" autocomplete="username">
                     </div>
 
                     <div class="auth-group">
                         <label for="password">PASSWORD</label>
-                        <input type="password" id="password" required minlength="4" autocomplete="current-password">
+                        <input type="password" id="password" required minlength="4" maxlength="72" autocomplete="current-password">
                     </div>
 
                     <p id="authMessage" class="auth-message"></p>
@@ -110,13 +110,18 @@
             }
         }
 
-        // Sync top segmented tabs with login.js mode state
+        // Sync top segmented tabs and input rules with login.js mode state
         const tabSignIn = document.getElementById("tabSignInBtn");
         const tabRegister = document.getElementById("tabRegisterBtn");
+        const pwInput = document.getElementById("password");
         const observer = new MutationObserver(() => {
             tabSignIn.classList.toggle("active", !isRegisterMode);
             tabRegister.classList.toggle("active", isRegisterMode);
-            if (!isRegisterMode && authFormTitle.textContent === "Sign In") {
+            pwInput.minLength = isRegisterMode ? 8 : 4;
+            pwInput.autocomplete = isRegisterMode ? "new-password" : "current-password";
+            if (isRegisterMode) {
+                authSubtitle.textContent = "3-20 letters/numbers/underscores. Password: 8+ chars with a letter & number.";
+            } else if (authFormTitle.textContent === "Sign In") {
                 authFormTitle.textContent = "Welcome back";
                 authSubtitle.textContent = "Sign in to browse the full collection.";
             }

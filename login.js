@@ -1,34 +1,18 @@
 const API_URL = "https://watch-api-eight.vercel.app";
 const API_KEY = "watch-api-001";
 
-const requestHeaders = {
-    "Content-Type": "application/json",
-    "x-api-key": API_KEY
-};
-
-// Redirect if already logged in
-if (localStorage.getItem("watch_user")) {
-    window.location.href = "index.html";
-}
-
-let isRegisterMode = false;
-
 const authForm = document.getElementById("authForm");
 const authFormTitle = document.getElementById("authFormTitle");
 const authSubtitle = document.getElementById("authSubtitle");
 const authSubmitBtn = document.getElementById("authSubmitBtn");
-const guestLoginBtn = document.getElementById("guestLoginBtn");
+const authMessage = document.getElementById("authMessage");
 const switchPrompt = document.getElementById("switchPrompt");
 const switchModeBtn = document.getElementById("switchModeBtn");
-const authMessage = document.getElementById("authMessage");
+const guestLoginBtn = document.getElementById("guestLoginBtn");
 
-// Continue as Guest
-guestLoginBtn.addEventListener("click", () => {
-    localStorage.setItem("watch_user", JSON.stringify({ username: "Guest", role: "guest" }));
-    window.location.href = "index.html";
-});
+let isRegisterMode = false;
 
-// Toggle between Login and Register
+// Toggle between Sign In and Create Account
 switchModeBtn.addEventListener("click", () => {
     isRegisterMode = !isRegisterMode;
     authMessage.textContent = "";
@@ -36,64 +20,93 @@ switchModeBtn.addEventListener("click", () => {
 
     if (isRegisterMode) {
         authFormTitle.textContent = "Create Account";
-        authSubtitle.textContent = "Create an account to view the full collection.";
+        authSubtitle.textContent = "3-20 letters/numbers/underscores. Password: 8+ chars with a letter & number.";
         authSubmitBtn.textContent = "CREATE ACCOUNT";
         switchPrompt.textContent = "Already have an account?";
         switchModeBtn.textContent = "Sign In";
     } else {
-        authFormTitle.textContent = "Sign In";
-        authSubtitle.textContent = "Enter your account details below.";
+        authFormTitle.textContent = "Welcome back";
+        authSubtitle.textContent = "Sign in to browse the full collection.";
         authSubmitBtn.textContent = "SIGN IN";
         switchPrompt.textContent = "Don't have an account?";
         switchModeBtn.textContent = "Create Account";
     }
 });
 
-// Handle Form Submit
+// Handle Sign In or Registration
 authForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
 
-    authSubmitBtn.disabled = true;
-    authSubmitBtn.textContent = "PLEASE WAIT...";
-    authMessage.textContent = "";
+    if (isRegisterMode) {
+        if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+            authMessage.textContent = "Username must be 3-20 characters using letters, numbers, or underscores only.";
+            authMessage.className = "auth-message error";
+            return;
+        }
+        if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+            authMessage.textContent = "Password must be at least 8 characters and include a letter and a number.";
+            authMessage.className = "auth-message error";
+            return;
+        }
+    }
 
-    const endpoint = isRegisterMode ? "/api/v1/auth/register" : "/api/v1/auth/login";
+    authSubmitBtn.disabled = true;
+    authMessage.textContent = isRegisterMode ? "Creating account..." : "Signing in...";
+    authMessage.className = "auth-message";
+
+    const endpoint = isRegisterMode ? `${API_URL}/api/v1/auth/register` : `${API_URL}/api/v1/auth/login`;
 
     try {
-        const response = await fetch(`${API_URL}${endpoint}`, {
+        const res = await fetch(endpoint, {
             method: "POST",
-            headers: requestHeaders,
+            headers: {
+                "Content-Type": "application/json",
+                "x-api-key": API_KEY
+            },
             body: JSON.stringify({ username, password })
         });
 
-        const data = await response.json();
+        const data = await res.json();
 
-        if (!response.ok) {
-            throw new Error(data.detail || "Authentication failed.");
+        if (!res.ok) {
+            const detailMsg = Array.isArray(data.detail)
+                ? data.detail[0]?.msg || "Invalid input."
+                : (data.detail || "Authentication failed.");
+            throw new Error(detailMsg);
         }
 
         if (isRegisterMode) {
-            authMessage.textContent = "Account created! Please sign in.";
-            authMessage.className = "auth-message success";
-            isRegisterMode = false;
-            authFormTitle.textContent = "Sign In";
-            authSubtitle.textContent = "Enter your account details below.";
-            authSubmitBtn.textContent = "SIGN IN";
-            switchPrompt.textContent = "Don't have an account?";
-            switchModeBtn.textContent = "Create Account";
-            document.getElementById("password").value = "";
-        } else {
-            localStorage.setItem("watch_user", JSON.stringify(data.user));
-            window.location.href = "index.html";
+            // Automatically log in after successful registration
+            const loginRes = await fetch(`${API_URL}/api/v1/auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": API_KEY
+                },
+                body: JSON.stringify({ username, password })
+            });
+            const loginData = await loginRes.json();
+            if (loginRes.ok) {
+                localStorage.setItem("watch_user", JSON.stringify(loginData.user));
+                window.location.href = "index.html";
+                return;
+            }
         }
-    } catch (error) {
-        authMessage.textContent = error.message;
+
+        localStorage.setItem("watch_user", JSON.stringify(data.user));
+        window.location.href = "index.html";
+    } catch (err) {
+        authMessage.textContent = err.message || "Unable to connect to server.";
         authMessage.className = "auth-message error";
-        authSubmitBtn.textContent = isRegisterMode ? "CREATE ACCOUNT" : "SIGN IN";
     } finally {
         authSubmitBtn.disabled = false;
     }
+});
+
+// Guest Preview Access (Limited to 10 watches, no favorites/reviews)
+guestLoginBtn.addEventListener("click", () => {
+    localStorage.setItem("watch_user", JSON.stringify({ username: "Guest", role: "guest" }));
+    window.location.href = "index.html";
 });

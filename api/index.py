@@ -1,9 +1,12 @@
-from fastapi import FastAPI, HTTPException, Header, Query, Depends
+from fastapi import FastAPI, HTTPException, Header, Query, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone, date, timedelta
 from zoneinfo import ZoneInfo
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Literal
+from collections import defaultdict
+import time
+import re
 import os
 import bcrypt
 import psycopg2
@@ -42,6 +45,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Simple Auth Rate Limiter
+auth_attempts: dict[str, list[float]] = defaultdict(list)
+
+def check_auth_rate_limit(request: Request, max_attempts: int = 10, window_seconds: int = 60):
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    recent = [ts for ts in auth_attempts[client_ip] if now - ts < window_seconds]
+    if len(recent) >= max_attempts:
+        auth_attempts[client_ip] = recent
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a minute and try again.")
+    recent.append(now)
+    auth_attempts[client_ip] = recent
 
 # Watch Data Models
 class Watch(BaseModel):
@@ -106,7 +122,26 @@ class WatchUpdate(BaseModel):
     description: Optional[str] = Field(default=None, min_length=1)
 
 # User, Favorite & Review Data Models
-class UserAuth(BaseModel):
+class UserRegister(BaseModel):
+    username: str = Field(min_length=3, max_length=20)
+    password: str = Field(min_length=8, max_length=72)
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        clean = value.strip()
+        if not re.match(r"^[a-zA-Z0-9_]{3,20}$", clean):
+            raise ValueError("Username must be 3-20 characters using only letters, numbers, or underscores.")
+        return clean
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        if not re.search(r"[A-Za-z]", value) or not re.search(r"\d", value):
+            raise ValueError("Password must be at least 8 characters and include a letter and a number.")
+        return value
+
+class UserLogin(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=4, max_length=72)
 
@@ -405,13 +440,21 @@ def delete_watch(watch_id: int, admin_user: dict = Depends(verify_admin)):
 
 # Protected Routes - User Authentication
 @app.post("/api/v1/auth/register", status_code=201, dependencies=[Depends(verify_api_key)])
-def register_user(user: UserAuth):
+def register_user(user: UserRegister, request: Request):
+    check_auth_rate_limit(request)
     clean_username = user.username.strip()
     hashed_pw = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id FROM users WHERE LOWER(username) = LOWER(%s);",
+                (clean_username,)
+            )
+            if cur.fetchone():
+                raise HTTPException(status_code=409, detail="Username already exists.")
+
             cur.execute(
                 """
                 INSERT INTO users (username, password_hash)
@@ -424,6 +467,9 @@ def register_user(user: UserAuth):
             log_activity(cur, "REGISTER", f"User '{clean_username}' registered", user_id=new_user["id"])
         conn.commit()
         return {"message": "Account created successfully.", "user": new_user}
+    except HTTPException:
+        conn.rollback()
+        raise
     except psycopg2.IntegrityError:
         conn.rollback()
         raise HTTPException(status_code=409, detail="Username already exists.")
@@ -434,20 +480,21 @@ def register_user(user: UserAuth):
         conn.close()
 
 @app.post("/api/v1/auth/login", dependencies=[Depends(verify_api_key)])
-def login_user(user: UserAuth):
+def login_user(user: UserLogin, request: Request):
+    check_auth_rate_limit(request)
     clean_username = user.username.strip()
 
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, username, password_hash, role FROM users WHERE username = %s;",
+                "SELECT id, username, password_hash, role FROM users WHERE LOWER(username) = LOWER(%s);",
                 (clean_username,)
             )
             db_user = cur.fetchone()
             if not db_user or not bcrypt.checkpw(user.password.encode("utf-8"), db_user["password_hash"].encode("utf-8")):
                 raise HTTPException(status_code=401, detail="Invalid username or password.")
-            log_activity(cur, "LOGIN", f"User '{clean_username}' signed in", user_id=db_user["id"])
+            log_activity(cur, "LOGIN", f"User '{db_user['username']}' signed in", user_id=db_user["id"])
         conn.commit()
     except HTTPException:
         raise
@@ -701,7 +748,7 @@ def calculate_chronicle_points(
     unused = max(0, max_guesses - guesses_used)
     points = cfg["base"] + (unused * cfg["per_unused"])
 
-    # Daily Challenge boost (+25 pts) & Daily-only consecutive calendar day streak boost (+5 pts per streak starting at 2 wins, max +50 pts)
+    # Daily Challenge boost & consecutive calendar day streak boost
     streak_bonus = 0
     if game_mode == "daily":
         points += 25
@@ -843,7 +890,6 @@ def record_chronicle_game(game: ChronicleGameCreate):
                 else:
                     new_streak = 0
             else:
-                # Classic ("practice") rounds do not affect or earn Daily streaks
                 new_streak = 0
 
             points_earned, max_guesses, streak_bonus = calculate_chronicle_points(
@@ -1126,7 +1172,7 @@ def deposit_goal_cutoff(goal_id: int, deposit: BrokeOClockDeposit):
             if not existing:
                 raise HTTPException(status_code=404, detail="Goal not found.")
 
-            # Default 15/30 cutoff deposit is half of monthly watch savings allocation
+            # Default cutoff deposit is half of monthly watch savings allocation
             if deposit.amount is not None:
                 increment = float(deposit.amount)
             else:
