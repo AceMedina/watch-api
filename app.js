@@ -788,4 +788,29 @@ document.getElementById("searchInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") searchWatches();
 });
 
+// Sync active navbar link on click and scroll
+const navLinks = document.querySelectorAll(".nav-link");
+const collectionsSection = document.getElementById("collections");
+
+function updateActiveNavLink() {
+    if (!collectionsSection) return;
+    const triggerPoint = collectionsSection.offsetTop - 160;
+    const isCollectionsActive = window.scrollY >= triggerPoint;
+
+    navLinks.forEach(link => {
+        const href = link.getAttribute("href");
+        link.classList.toggle("active", isCollectionsActive ? href === "#collections" : href === "#hero");
+    });
+}
+
+navLinks.forEach(link => {
+    link.addEventListener("click", () => {
+        navLinks.forEach(item => item.classList.remove("active"));
+        link.classList.add("active");
+    });
+});
+
+window.addEventListener("scroll", updateActiveNavLink, { passive: true });
+updateActiveNavLink();
+
 loadWatches();
