@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Header, Query, Depends, Request
+from fastapi import FastAPI, HTTPException, Header, Query, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone, date, timedelta
 from zoneinfo import ZoneInfo
@@ -208,6 +208,8 @@ def home():
         "endpoints": [
             "/health",
             "/api/v1/watches",
+            "/api/v1/watches/snapshot",
+            "/api/v1/watches/version",
             "/api/v1/watches/affordable",
             "/api/v1/watches/{id}",
             "/api/v1/watches/search",
@@ -246,6 +248,74 @@ def get_watches():
             cur.execute("SELECT * FROM watches ORDER BY id ASC;")
             rows = cur.fetchall()
         return {"count": len(rows), "watches": rows}
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+# Cached JSON Snapshot & Version Check
+@app.get("/api/v1/watches/snapshot")
+def get_watches_snapshot(response: Response):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT * FROM watches ORDER BY id ASC;")
+            rows = cur.fetchall()
+            cur.execute(
+                """
+                SELECT MAX(id) AS latest_log_id, MAX(created_at) AS last_updated
+                FROM audit_logs
+                WHERE action IN ('CREATE_WATCH', 'UPDATE_WATCH', 'DELETE_WATCH');
+                """
+            )
+            meta = cur.fetchone()
+
+        latest_id = meta["latest_log_id"] if meta and meta["latest_log_id"] else 0
+        last_updated = (
+            meta["last_updated"].isoformat()
+            if meta and meta["last_updated"]
+            else datetime.now(timezone.utc).isoformat()
+        )
+        version_tag = f"v{len(rows)}-{latest_id}"
+
+        response.headers["Cache-Control"] = "public, s-maxage=300, stale-while-revalidate=600"
+        return {
+            "version": version_tag,
+            "last_updated": last_updated,
+            "count": len(rows),
+            "watches": rows
+        }
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.get("/api/v1/watches/version")
+def get_watches_version(response: Response):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) AS total FROM watches;")
+            count_row = cur.fetchone()
+            cur.execute(
+                """
+                SELECT MAX(id) AS latest_log_id, MAX(created_at) AS last_updated
+                FROM audit_logs
+                WHERE action IN ('CREATE_WATCH', 'UPDATE_WATCH', 'DELETE_WATCH');
+                """
+            )
+            meta = cur.fetchone()
+
+        total = count_row["total"] if count_row else 0
+        latest_id = meta["latest_log_id"] if meta and meta["latest_log_id"] else 0
+        last_updated = meta["last_updated"].isoformat() if meta and meta["last_updated"] else None
+
+        response.headers["Cache-Control"] = "no-cache"
+        return {
+            "version": f"v{total}-{latest_id}",
+            "count": total,
+            "last_updated": last_updated
+        }
     except psycopg2.Error:
         raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:

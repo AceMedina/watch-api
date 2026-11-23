@@ -37,6 +37,7 @@ function logoutUser() {
 
 const API_URL = "https://watch-api-eight.vercel.app";
 const API_KEY = "watch-api-001";
+const CATALOG_CACHE_KEY = "watch_catalog_cache";
 
 const requestHeaders = {
     "x-api-key": API_KEY
@@ -71,16 +72,81 @@ let currentHeroIndex = 0;
 let selectedBrand = "";
 let isHeroAnimating = false;
 
-// Fetch watches and favorites
-async function loadWatches() {
+// Load catalog using cached JSON snapshot, localStorage persistence, and local watches.json fallback
+async function fetchCatalogWithCache(forceRefresh = false) {
+    let cachedPayload = null;
     try {
-        let response = await fetch(`${API_URL}/watches`);
-        if (!response.ok) {
-            response = await fetch(`${API_URL}/api/v1/watches`, { headers: requestHeaders });
-        }
+        const rawCache = localStorage.getItem(CATALOG_CACHE_KEY);
+        if (rawCache) cachedPayload = JSON.parse(rawCache);
+    } catch (e) {
+        cachedPayload = null;
+    }
 
-        const data = await response.json();
-        allWatches = isGuest ? data.watches.slice(0, 10) : data.watches;
+    // Check lightweight version endpoint to avoid unnecessary full table reads
+    if (!forceRefresh && cachedPayload && Array.isArray(cachedPayload.watches) && cachedPayload.watches.length > 0) {
+        try {
+            const verRes = await fetch(`${API_URL}/api/v1/watches/version`);
+            if (verRes.ok) {
+                const verData = await verRes.json();
+                if (verData.version && verData.version === cachedPayload.version) {
+                    return cachedPayload.watches;
+                }
+            }
+        } catch (err) {
+            // If offline, return persistent browser cache immediately
+            return cachedPayload.watches;
+        }
+    }
+
+    // Fetch live cached snapshot from API
+    try {
+        const snapRes = await fetch(`${API_URL}/api/v1/watches/snapshot`);
+        if (snapRes.ok) {
+            const snapData = await snapRes.json();
+            if (Array.isArray(snapData.watches)) {
+                localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify({
+                    version: snapData.version || `v${snapData.watches.length}`,
+                    watches: snapData.watches
+                }));
+                return snapData.watches;
+            }
+        }
+    } catch (err) {
+        console.warn("Snapshot endpoint unreachable, trying local fallback...");
+    }
+
+    // Fallback to standard /api/v1/watches route
+    try {
+        const apiRes = await fetch(`${API_URL}/api/v1/watches`, { headers: requestHeaders });
+        if (apiRes.ok) {
+            const apiData = await apiRes.json();
+            if (Array.isArray(apiData.watches)) {
+                return apiData.watches;
+            }
+        }
+    } catch (err) {
+        console.warn("Live API unreachable, falling back to static watches.json...");
+    }
+
+    // Final offline fallback: bundled static watches.json file
+    const localRes = await fetch("watches.json");
+    if (localRes.ok) {
+        const localData = await localRes.json();
+        return localData.watches || [];
+    }
+
+    if (cachedPayload && Array.isArray(cachedPayload.watches)) {
+        return cachedPayload.watches;
+    }
+
+    throw new Error("Unable to load watch catalog.");
+}
+
+// Fetch watches and favorites
+async function loadWatches(forceRefresh = false) {
+    try {
+        const watchesList = await fetchCatalogWithCache(forceRefresh);
+        allWatches = isGuest ? watchesList.slice(0, 10) : watchesList;
         featuredWatches = allWatches.slice(0, 5);
 
         if (!isGuest && currentUser.id) {
@@ -433,7 +499,8 @@ async function submitWatchForm(event) {
             throw new Error(data.detail || "Failed to save watch.");
         }
 
-        await loadWatches();
+        localStorage.removeItem(CATALOG_CACHE_KEY);
+        await loadWatches(true);
         closeWatchFormModal();
     } catch (err) {
         msgEl.textContent = err.message || "Error saving watch.";
@@ -470,8 +537,9 @@ async function handleDeleteWatch() {
         }
 
         favoriteWatchIds.delete(watchId);
+        localStorage.removeItem(CATALOG_CACHE_KEY);
         closeModal();
-        await loadWatches();
+        await loadWatches(true);
     } catch (err) {
         alert(err.message || "Unable to delete timepiece.");
         delBtn.disabled = false;
@@ -619,34 +687,26 @@ async function searchWatches() {
         return;
     }
 
+    const filterLocal = () => allWatches.filter(w => 
+        w.brand.toLowerCase().includes(query.toLowerCase()) ||
+        w.model.toLowerCase().includes(query.toLowerCase()) ||
+        w.nickname.toLowerCase().includes(query.toLowerCase()) ||
+        w.reference_number.toLowerCase().includes(query.toLowerCase()) ||
+        (w.category && w.category.toLowerCase().includes(query.toLowerCase()))
+    );
+
     if (isGuest) {
-        const filtered = allWatches.filter(w => 
-            w.brand.toLowerCase().includes(query.toLowerCase()) ||
-            w.model.toLowerCase().includes(query.toLowerCase()) ||
-            w.nickname.toLowerCase().includes(query.toLowerCase()) ||
-            w.reference_number.toLowerCase().includes(query.toLowerCase()) ||
-            (w.category && w.category.toLowerCase().includes(query.toLowerCase()))
-        );
-        displayWatches(filtered);
+        displayWatches(filterLocal());
         return;
     }
 
     try {
-        let response = await fetch(`${API_URL}/watches/search?q=${encodeURIComponent(query)}`);
-        if (!response.ok) {
-            response = await fetch(`${API_URL}/api/v1/watches/search?q=${encodeURIComponent(query)}`, { headers: requestHeaders });
-        }
+        const response = await fetch(`${API_URL}/api/v1/watches/search?q=${encodeURIComponent(query)}`, { headers: requestHeaders });
+        if (!response.ok) throw new Error("Search failed");
         const data = await response.json();
         displayWatches(data.results);
     } catch (error) {
-        const filtered = allWatches.filter(w => 
-            w.brand.toLowerCase().includes(query.toLowerCase()) ||
-            w.model.toLowerCase().includes(query.toLowerCase()) ||
-            w.nickname.toLowerCase().includes(query.toLowerCase()) ||
-            w.reference_number.toLowerCase().includes(query.toLowerCase()) ||
-            (w.category && w.category.toLowerCase().includes(query.toLowerCase()))
-        );
-        displayWatches(filtered);
+        displayWatches(filterLocal());
     }
 }
 
