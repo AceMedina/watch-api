@@ -173,6 +173,7 @@ def home():
         "endpoints": [
             "/health",
             "/api/v1/watches",
+            "/api/v1/watches/affordable",
             "/api/v1/watches/{id}",
             "/api/v1/watches/search",
             "/api/v1/auth/register",
@@ -210,6 +211,30 @@ def get_watches():
             cur.execute("SELECT * FROM watches ORDER BY id ASC;")
             rows = cur.fetchall()
         return {"count": len(rows), "watches": rows}
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.get("/api/v1/watches/affordable", dependencies=[Depends(verify_api_key)])
+def get_affordable_watches(
+    max_price: float = Query(..., gt=0),
+    limit: int = Query(default=20, ge=1, le=50)
+):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT * FROM watches
+                WHERE price_php <= %s
+                ORDER BY price_php DESC, id ASC
+                LIMIT %s;
+                """,
+                (max_price, limit)
+            )
+            results = cur.fetchall()
+        return {"max_price": max_price, "count": len(results), "watches": results}
     except psycopg2.Error:
         raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
