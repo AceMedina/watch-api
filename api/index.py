@@ -184,7 +184,11 @@ def home():
             "/api/v1/chronicle/daily",
             "/api/v1/chronicle/games",
             "/api/v1/chronicle/users/{user_id}/history",
-            "/api/v1/chronicle/leaderboard"
+            "/api/v1/chronicle/leaderboard",
+            "/api/v1/broke-oclock/users/{user_id}/goals",
+            "/api/v1/broke-oclock/goals",
+            "/api/v1/broke-oclock/goals/{goal_id}/deposit",
+            "/api/v1/broke-oclock/goals/{goal_id}"
         ]
     }
 
@@ -1006,6 +1010,160 @@ def get_chronicle_leaderboard(
 
         return {"scope": scope, "difficulty": difficulty, "today": today.isoformat(), "leaderboard": leaders}
     except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+# Broke O'Clock Goal Models
+class BrokeOClockGoalCreate(BaseModel):
+    user_id: int
+    watch_id: int
+    monthly_salary: float = Field(gt=0)
+    savings_rate: int = Field(ge=5, le=100)
+    verdict: Optional[str] = Field(default=None, max_length=50)
+
+class BrokeOClockDeposit(BaseModel):
+    user_id: int
+    amount: Optional[float] = Field(default=None, gt=0)
+
+# Broke O'Clock Routes - Grail Goals
+@app.get("/api/v1/broke-oclock/users/{user_id}/goals", dependencies=[Depends(verify_api_key)])
+def get_user_goals(user_id: int):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT g.id, g.user_id, g.watch_id, g.monthly_salary, g.savings_rate,
+                       g.amount_saved, g.verdict, g.created_at,
+                       w.brand, w.model, w.nickname, w.price_php, w.image
+                FROM broke_oclock_goals g
+                INNER JOIN watches w ON g.watch_id = w.id
+                WHERE g.user_id = %s
+                ORDER BY g.created_at DESC;
+                """,
+                (user_id,)
+            )
+            goals = cur.fetchall()
+        return {"user_id": user_id, "count": len(goals), "goals": goals}
+    except psycopg2.Error:
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.post("/api/v1/broke-oclock/goals", status_code=201, dependencies=[Depends(verify_api_key)])
+def create_user_goal(goal: BrokeOClockGoalCreate):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO broke_oclock_goals (user_id, watch_id, monthly_salary, savings_rate, verdict)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING *;
+                """,
+                (goal.user_id, goal.watch_id, goal.monthly_salary, goal.savings_rate, goal.verdict)
+            )
+            created = cur.fetchone()
+            log_activity(
+                cur,
+                "PIN_GRAIL_GOAL",
+                f"Pinned grail goal for watch ID {goal.watch_id}",
+                user_id=goal.user_id,
+                watch_id=goal.watch_id
+            )
+        conn.commit()
+        return {"message": "Grail goal pinned.", "goal": created}
+    except psycopg2.IntegrityError:
+        conn.rollback()
+        raise HTTPException(status_code=404, detail="User or watch not found.")
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.patch("/api/v1/broke-oclock/goals/{goal_id}/deposit", dependencies=[Depends(verify_api_key)])
+def deposit_goal_cutoff(goal_id: int, deposit: BrokeOClockDeposit):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT g.*, w.price_php
+                FROM broke_oclock_goals g
+                INNER JOIN watches w ON g.watch_id = w.id
+                WHERE g.id = %s AND g.user_id = %s;
+                """,
+                (goal_id, deposit.user_id)
+            )
+            existing = cur.fetchone()
+            if not existing:
+                raise HTTPException(status_code=404, detail="Goal not found.")
+
+            # Default 15/30 cutoff deposit is half of monthly watch savings allocation
+            if deposit.amount is not None:
+                increment = float(deposit.amount)
+            else:
+                monthly_alloc = float(existing["monthly_salary"]) * (int(existing["savings_rate"]) / 100.0)
+                increment = round(monthly_alloc / 2.0, 2)
+
+            new_saved = float(existing["amount_saved"]) + increment
+
+            cur.execute(
+                """
+                UPDATE broke_oclock_goals
+                SET amount_saved = %s
+                WHERE id = %s
+                RETURNING *;
+                """,
+                (new_saved, goal_id)
+            )
+            updated = cur.fetchone()
+            log_activity(
+                cur,
+                "GOAL_DEPOSIT",
+                f"Logged cutoff deposit (+PHP {increment:,.2f}) on goal ID {goal_id}",
+                user_id=deposit.user_id,
+                watch_id=existing["watch_id"]
+            )
+        conn.commit()
+        return {"message": "Cutoff deposit logged.", "added": increment, "goal": updated}
+    except HTTPException:
+        conn.rollback()
+        raise
+    except psycopg2.Error:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail="Database operation failed.")
+    finally:
+        conn.close()
+
+@app.delete("/api/v1/broke-oclock/goals/{goal_id}", dependencies=[Depends(verify_api_key)])
+def delete_user_goal(goal_id: int, user_id: int = Query(...)):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM broke_oclock_goals WHERE id = %s AND user_id = %s RETURNING id, watch_id;",
+                (goal_id, user_id)
+            )
+            deleted = cur.fetchone()
+            if not deleted:
+                raise HTTPException(status_code=404, detail="Goal not found.")
+            log_activity(
+                cur,
+                "DELETE_GRAIL_GOAL",
+                f"Removed grail goal ID {goal_id}",
+                user_id=user_id,
+                watch_id=deleted["watch_id"]
+            )
+        conn.commit()
+        return {"message": "Goal removed."}
+    except HTTPException:
+        conn.rollback()
+        raise
+    except psycopg2.Error:
+        conn.rollback()
         raise HTTPException(status_code=500, detail="Database operation failed.")
     finally:
         conn.close()
