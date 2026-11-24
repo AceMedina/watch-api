@@ -35,7 +35,7 @@ function logoutUser() {
     window.location.href = "login.html";
 }
 
-const API_URL = "https://watch-api-eight.vercel.app";
+const API_URL = "";
 const API_KEY = "watch-api-001";
 const CATALOG_CACHE_KEY = "watch_catalog_cache";
 

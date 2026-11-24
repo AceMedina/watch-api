@@ -1,4 +1,4 @@
-const API_URL = "https://watch-api-eight.vercel.app";
+const API_URL = "";
 const API_KEY = "watch-api-001";
 
 const authForm = document.getElementById("authForm");
