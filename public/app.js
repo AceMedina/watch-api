@@ -14,6 +14,11 @@ if (roleBadge) {
     roleBadge.textContent = userRole.toUpperCase();
 }
 
+const authActionBtn = document.getElementById("authActionBtn");
+if (authActionBtn) {
+    authActionBtn.textContent = isGuest ? "SIGN IN" : "LOG OUT";
+}
+
 if (isAdmin) {
     const auditBtn = document.getElementById("auditLogNavBtn");
     if (auditBtn) auditBtn.style.display = "inline-block";
