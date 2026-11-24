@@ -1410,6 +1410,61 @@ html {
     font-size: inherit;
 }
 
+/* Ecosystem switcher box */
+.ecosystem-box {
+    margin-top: clamp(14px, 1.8vh, 22px);
+    padding-top: clamp(12px, 1.5vh, 18px);
+    border-top: 1px solid #E6E0D5;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ecosystem-label {
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #8A8478;
+    text-align: center;
+}
+
+.ecosystem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.ecosystem-link {
+    background-color: #F3EFE8;
+    border: 1px solid #E6E0D5;
+    border-radius: 4px;
+    padding: 10px 12px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: border-color 0.2s, background-color 0.2s, transform 0.15s;
+}
+
+.ecosystem-link:hover {
+    background-color: #FDFDFD;
+    border-color: #336659;
+    transform: translateY(-1px);
+}
+
+.ecosystem-name {
+    font-family: 'Times New Roman', Georgia, serif;
+    font-size: 0.96rem;
+    color: #1F493D;
+}
+
+.ecosystem-desc {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    color: #6B655B;
+}
+
 /* Responsive layouts */
 @media (max-width: 1024px) {
     .watch-grid {
