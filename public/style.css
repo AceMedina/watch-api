@@ -1435,34 +1435,46 @@ html {
 }
 
 .ecosystem-link {
-    background-color: #F3EFE8;
-    border: 1px solid #E6E0D5;
+    background-color: #1F493D;
+    border: 1px solid #1F493D;
     border-radius: 4px;
-    padding: 10px 12px;
+    padding: 11px 13px;
     text-decoration: none;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    transition: border-color 0.2s, background-color 0.2s, transform 0.15s;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.ecosystem-link {
+    background-color: #1F493D;
+    border: 1px solid #1F493D;
+    border-radius: 4px;
+    padding: 11px 13px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.15s;
 }
 
 .ecosystem-link:hover {
-    background-color: #FDFDFD;
+    background-color: #336659;
     border-color: #336659;
     transform: translateY(-1px);
 }
 
 .ecosystem-name {
     font-family: 'Times New Roman', Georgia, serif;
-    font-size: 0.96rem;
-    color: #1F493D;
+    font-size: 0.98rem;
+    color: #FDFDFD;
 }
 
 .ecosystem-desc {
     font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0.4px;
-    color: #6B655B;
+    color: rgba(243, 239, 232, 0.82);
 }
 
 /* Responsive layouts */
